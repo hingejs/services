@@ -18,7 +18,8 @@
     "js",
     "services",
     "spa",
-    "web"
+    "web",
+    "web-components"
   ],
   "author": "",
   "license": "MIT",
