@@ -1,0 +1,29 @@
+{
+  "name": "hingejs",
+  "version": "1.0.0",
+  "description": "Front-End ES6+ Classes used for UI development",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hingejs/services.git"
+  },
+  "keywords": [
+    "app",
+    "api",
+    "framework",
+    "javascript",
+    "js",
+    "services",
+    "spa",
+    "web"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hingejs/services/issues"
+  },
+  "homepage": "https://github.com/hingejs/services#readme"
+}
