@@ -38,9 +38,3 @@ node_modules/
 coverage/
 dist/*
 jsdoc/
-
-# SonarQube
-.scannerwork/**
-
-# Files
-html-cache.js
