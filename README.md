@@ -89,7 +89,7 @@ const RouteCtrl = async (req, next) => {
 
 Router.defaultPath('/home', RouteCtrl)
 //or
-Router.setPath('/auth-home', AuthService.checkSession.bind(AuthService), routeCtrl)
+Router.setPath('/auth-home', AuthService.checkSession.bind(AuthService), RouteCtrl)
 ```
 
 
