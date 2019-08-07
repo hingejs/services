@@ -2,6 +2,15 @@
 
 Front-End ES6+ Classes used for UI development
 
+## Debounce
+
+```js
+const translateDebounce = Debounce(() => {
+  this.translatePage()
+})
+
+translateDebounce()
+```
 
 ## FetchInterceptor
 
@@ -27,3 +36,62 @@ FetchInterceptor.register({
   }
 })
 ```
+
+## HTML-Marker
+
+Used to render html using string literals and allow updates without using innerHTML
+
+```js
+let model = { test: 'this is a test' }
+const htmlMarker = new HtmlMarker(model)
+const htmlString = '<p>${test}</p>'
+await htmlMarker.render(document.body, htmlString)
+```
+
+To update the data
+
+```js
+model.test = 'this is now updated'
+htmlMarker.updateModel(model)
+```
+
+## Http-Fetch
+
+Enhanced version of the native fetch that uses observables
+
+```js
+new HttpFetch().get(URL).subscribe({
+  error: response => {
+    console.log(response)
+  },
+  next: payload => {
+   console.log(payload)
+  }
+})
+```
+
+
+## Router
+
+Used for single page routing
+
+> Recommended to use in conjunction with web components `route-display` and `route-link`
+
+```js
+const RouteCtrl = async (req, next) => {
+  const $routeDisplay = document.querySelector('route-display')
+  req.exit(() => {
+    // function to execute before exiting route
+  })
+  await $routeDisplay.insertContent(HtmlCache.get('home/home.html'))
+  next()
+}
+
+Router.defaultPath('/home', RouteCtrl)
+//or
+Router.setPath('/auth-home', AuthService.checkSession.bind(AuthService), routeCtrl)
+```
+
+
+
+

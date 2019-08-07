@@ -42,7 +42,7 @@ module.exports = function (config) {
           {
             enforce: 'post',
             exclude: /(node_modules|index\.js|\.spec\.js)$/,
-            include: path.resolve('lib/'),
+            include: path.resolve('src/'),
             test: /\.js$/,
             use: {
               loader: 'istanbul-instrumenter-loader',

@@ -4,11 +4,11 @@
   "description": "Front-End ES6+ Classes used for UI development",
   "main": "index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint -c ./.eslintrc --ext .js ./lib",
+    "lint": "./node_modules/.bin/eslint -c ./.eslintrc --ext .js ./src",
     "test": "./node_modules/.bin/karma start test/karma.conf.js"
   },
   "directories": {
-    "lib": "lib"
+    "src": "src"
   },
   "repository": {
     "type": "git",

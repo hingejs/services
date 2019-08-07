@@ -1,4 +1,4 @@
-class RouterService {
+class Router {
 
   constructor() {
     if (this.instance) {
@@ -13,7 +13,6 @@ class RouterService {
     this.historyChangeBind = this.historyChange.bind(this)
     window.addEventListener('url-change', this.historyChangeBind)
     window.addEventListener('popstate', this.historyChangeBind)
-    this.$routeDisplay = document.querySelector('route-display')
     this.$defaultPath
 
     const path = this.urlFullPath()
@@ -71,9 +70,7 @@ class RouterService {
 
     let handlers = this.getPath(route)
     let req = {
-      addElementToDisplay: this._addElementToDisplay.bind(this),
       exit: this._exit.bind(this),
-      load: this._load.bind(this),
       params: this._pathParams(route),
       search: new URLSearchParams(window.location.search)
     }
@@ -161,17 +158,6 @@ class RouterService {
     this.goto(this.urlFullPath())
   }
 
-  async _load(content) {
-    if (document.body.contains(this.$routeDisplay)) {
-      await this.$routeDisplay.insertContent(content)
-    }
-    return Promise.resolve(this)
-  }
-
-  _addElementToDisplay(element, position) {
-    this.$routeDisplay.addElementToContent(element, position)
-  }
-
   _exit(fn) {
     this._exitFn = fn
   }
@@ -204,4 +190,4 @@ class RouterService {
   }
 }
 
-export default new RouterService()
+export default new Router()
