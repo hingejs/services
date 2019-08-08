@@ -37,7 +37,7 @@ export default class HtmlMarker {
   async render(target, templateString) {
     const rootElement = this._fragmentFromString(templateString)
     const frag = this._markerTree(rootElement)
-    if (document.body.contains(target)) {
+    if (target) { /* allow for shadowRoot */
       target.appendChild(frag)
       await this._referenceTree(target)
       await this.update()
@@ -159,7 +159,11 @@ export default class HtmlMarker {
         })
       }
       if (node.nodeType === Node.COMMENT_NODE) {
-        this.referenceNodes.add({ node, oldValue: null, value: node.nodeValue })
+        if (node.parentElement.tagName === 'TEXTAREA') {
+          this.referenceNodes.add({ node: node.parentElement, oldValue: null, value: node.nodeValue })
+        } else {
+          this.referenceNodes.add({ node, oldValue: null, value: node.nodeValue })
+        }
       }
     }
     return Promise.resolve(true)
@@ -178,6 +182,8 @@ export default class HtmlMarker {
           } else {
             node.value = newValue
           }
+        } else if (node.tagName === 'TEXTAREA') {
+          node.value = newValue
         }
       }
       if (isBooleanAttr) {
