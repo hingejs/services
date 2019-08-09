@@ -36,5 +36,4 @@ Thumbs.db
 # Folders
 node_modules/
 coverage/
-dist/*
 jsdoc/

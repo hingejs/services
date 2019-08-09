@@ -4,6 +4,7 @@
   "description": "Front-End ES6+ Classes used for UI development",
   "main": "index.js",
   "scripts": {
+    "build": "./node_modules/.bin/webpack --mode production --config webpack.config.js",
     "lint": "./node_modules/.bin/eslint -c ./.eslintrc --ext .js ./src",
     "test": "./node_modules/.bin/karma start test/karma.conf.js"
   },
@@ -44,6 +45,7 @@
     "karma-webpack": "^3.0.5",
     "mocha": "^5.2.0",
     "sinon": "^7.2.3",
-    "webpack": "^4.27.1"
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.3.6"
   }
 }
