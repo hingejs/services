@@ -30,6 +30,7 @@ const BOOLEAN_ATTRIBUTES = [
 export default class HtmlMarker {
   constructor(defaultModel) {
     this.referenceNodes = new Set()
+    this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
     this.updateModel(defaultModel)
   }
@@ -86,6 +87,9 @@ export default class HtmlMarker {
     let expressions = []
     while (walker.nextNode()) {
       const node = walker.currentNode
+      if (node.nodeType === Node.ELEMENT_NODE && (window.customElements.get(node.tagName) || node.tagName.includes('-'))) {
+        continue
+      }
       if (node.hasChildNodes()) {
         expressions = expressions.concat(this._markChildNodes(node.childNodes))
       }
@@ -108,7 +112,7 @@ export default class HtmlMarker {
     )
     let i = 0
     while (walkerComments.nextNode()) {
-      walkerComments.currentNode.textContent = expressions[i++]
+      walkerComments.currentNode.textContent = `${this.uuid}${expressions[i++]}`
     }
     return rootElement
   }
@@ -139,6 +143,7 @@ export default class HtmlMarker {
     )
     while (walker.nextNode()) {
       const node = walker.currentNode
+      /* Do not filter custom elements to allow attribute updates */
       if (node.nodeType === Node.ELEMENT_NODE && node.hasAttributes()) {
         const attrs = [...node.attributes]
         attrs.forEach(attr => {
@@ -159,10 +164,13 @@ export default class HtmlMarker {
         })
       }
       if (node.nodeType === Node.COMMENT_NODE) {
-        if (node.parentElement.tagName === 'TEXTAREA') {
-          this.referenceNodes.add({ node: node.parentElement, oldValue: null, value: node.nodeValue })
-        } else {
-          this.referenceNodes.add({ node, oldValue: null, value: node.nodeValue })
+        if (node.nodeValue.includes(this.uuid)) {
+          const nodeValue = node.nodeValue.replace(this.uuid, '')
+          if (node.parentElement.tagName === 'TEXTAREA') {
+            this.referenceNodes.add({ node: node.parentElement, oldValue: null, value: nodeValue })
+          } else {
+            this.referenceNodes.add({ node, oldValue: null, value: nodeValue })
+          }
         }
       }
     }
