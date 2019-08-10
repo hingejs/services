@@ -2,6 +2,15 @@
 
 Front-End ES6+ Classes used for UI development
 
+## CDN
+
+https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js
+
+or by version
+
+https://cdn.jsdelivr.net/npm/@hingejs/services@0.0.3/index.min.js
+
+
 ## Debounce
 
 ```js
