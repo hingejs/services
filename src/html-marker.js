@@ -36,6 +36,8 @@ export default class HtmlMarker {
   }
 
   async render(target, templateString) {
+    /* remove comments that are found in the string since we use them as markers */
+    templateString = templateString.replace(/<!--[\s\S]*?-->/gm, '')
     const rootElement = this._fragmentFromString(templateString)
     const frag = this._markerTree(rootElement)
     if (target) { /* allow for shadowRoot */
@@ -179,25 +181,29 @@ export default class HtmlMarker {
 
   update() {
     this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
-      let newValue = this._interpolate({ params: this.model, template: value })
-      if (!isBooleanAttr && newValue !== oldValue) {
-        if (node.nodeType === Node.COMMENT_NODE) {
-          const newNode = this._parseHTML(`<span>${newValue}</span>`)
-          node.parentNode.replaceChild(newNode, node.nextSibling)
-        } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
-          if (node.nodeName === 'class') {
-            newValue = this._handleClassValue({ node, oldValue, value })
-          } else {
+      if (!document.body.contains(node)) {
+        this.referenceNodes.delete(reference)
+      } else {
+        let newValue = this._interpolate({ params: this.model, template: value })
+        if (!isBooleanAttr && newValue !== oldValue) {
+          if (node.nodeType === Node.COMMENT_NODE) {
+            const newNode = this._parseHTML(`<span>${newValue}</span>`)
+            node.parentNode.replaceChild(newNode, node.nextSibling)
+          } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
+            if (node.nodeName === 'class') {
+              newValue = this._handleClassValue({ node, oldValue, value })
+            } else {
+              node.value = newValue
+            }
+          } else if (node.tagName === 'TEXTAREA') {
             node.value = newValue
           }
-        } else if (node.tagName === 'TEXTAREA') {
-          node.value = newValue
         }
+        if (isBooleanAttr) {
+          node.toggleAttribute(name, !!newValue.toString().length)
+        }
+        reference.oldValue = newValue
       }
-      if (isBooleanAttr) {
-        node.toggleAttribute(name, !!newValue.toString().length)
-      }
-      reference.oldValue = newValue
     })
     return Promise.resolve(true)
   }
