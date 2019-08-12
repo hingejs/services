@@ -2,6 +2,12 @@
 
 Front-End ES6+ Classes used for UI development
 
+## Install
+
+```sh
+$ npm install @hingejs/services --save
+```
+
 ## Live demos
 
 https://hingejs.github.io/services/
@@ -14,6 +20,10 @@ or by version
 
 https://cdn.jsdelivr.net/npm/@hingejs/services@0.0.3/index.min.js
 
+
+```js
+import { HtmlMarker } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+```
 
 ## Debounce
 
