@@ -2,6 +2,10 @@
 
 Front-End ES6+ Classes used for UI development
 
+## Live demos
+
+https://hingejs.github.io/services/
+
 ## CDN
 
 https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js
