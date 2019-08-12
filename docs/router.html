@@ -1,0 +1,117 @@
+<html>
+
+<head>
+  <title>&#8762; Hingejs</title>
+  <style>
+    route-link {
+      border: 1px solid blue;
+      cursor: pointer;
+      padding: 1rem;
+    }
+    route-link:hover {
+      background-color: blue;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>&#8762; Hingejs</h1>
+  <h2>Router</h2>
+  <blockquote>
+    This Router service is used to handle routes for a
+    Single page Application (SPA)
+  </blockquote>
+  <h2><a href="index.html">&#8617; Go Back</a></h2>
+
+  <h3>Working sample</h3>
+
+  <route-link data-route="docs/">
+    Page1
+  </route-link>
+  <route-link data-route="docs/page2">
+    Page2
+  </route-link>
+
+  <route-display></route-display>
+
+  <h3>Sample code</h3>
+
+  <h4>HTML</h4>
+  <pre>
+      &lt;route-link data-route="docs/">
+        Page1
+      &lt;/route-link>
+      &lt;route-link data-route="docs/page2">
+        Page2
+      &lt;/route-link>
+
+      &lt;route-display>&lt;/route-display>
+  </pre>
+
+  <h4>JavaScript</h4>
+  <pre>
+      &lt;script type="module" src="https://cdn.jsdelivr.net/npm/@hingejs/webcomponents/index.min.js">&lt;/script>
+      &lt;script type="module">
+        import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+
+        /* using the HingeJS scaffold files will have a way to cache all html pages */
+        const HtmlCache = new Map()
+        HtmlCache.set('page1.html', '&lt;template>&lt;p>Page 1&lt;/p>&lt;/template>&lt;style>p { color: red; }&lt;/style>')
+        HtmlCache.set('page2.html', '&lt;template>&lt;p>Page 2&lt;/p>&lt;/template>&lt;style>p { color: blue; }&lt;/style>')
+
+
+        const RouteCtrlPage1 = async (req, next) => {
+          req.exit(() => {
+            console.log('anything you want to do before this function is complete')
+          })
+          const routeDisplay = document.querySelector('route-display')
+          await routeDisplay.insertContent(HtmlCache.get('page1.html'))
+          next()
+        }
+
+        const RouteCtrlPage2 = async (req, next) => {
+          const routeDisplay = document.querySelector('route-display')
+          await routeDisplay.insertContent(HtmlCache.get('page2.html'))
+          next()
+        }
+
+        Router.defaultPath('docs/', RouteCtrlPage1)
+        Router.setPath('docs/page2', RouteCtrlPage2)
+
+      &lt;/script>
+  </pre>
+
+
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@hingejs/webcomponents/index.min.js"></script>
+  <script type="module">
+    import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+
+    /* using the HingeJS scaffold files will have a way to cache all html pages */
+    const HtmlCache = new Map()
+    HtmlCache.set('page1.html', '<template><p>Page 1</p></template><style>p { color: red; }</style>')
+    HtmlCache.set('page2.html', '<template><p>Page 2</p></template><style>p { color: blue; }</style>')
+
+
+    const RouteCtrlPage1 = async (req, next) => {
+      req.exit(() => {
+        console.log('anything you want to do before this function is complete')
+      })
+      const routeDisplay = document.querySelector('route-display')
+      await routeDisplay.insertContent(HtmlCache.get('page1.html'))
+      next()
+    }
+
+    const RouteCtrlPage2 = async (req, next) => {
+      const routeDisplay = document.querySelector('route-display')
+      await routeDisplay.insertContent(HtmlCache.get('page2.html'))
+      next()
+    }
+
+    Router.defaultPath('docs/', RouteCtrlPage1)
+    Router.setPath('docs/page2', RouteCtrlPage2)
+
+  </script>
+</body>
+
+</html>
