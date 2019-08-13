@@ -1,0 +1,53 @@
+<html>
+<head>
+  <title>&#8762; Hingejs</title>
+</head>
+<body>
+  <h1>&#8762; Hingejs</h1>
+  <h2>Base Service</h2>
+  <blockquote>
+    The Base Service is used for extending other services.
+    Best used for Single page applications
+  </blockquote>
+
+  <h2><a href="index.html">&#8617; Go Back</a></h2>
+
+  <h3>Working sample</h3>
+  <p>Non Available</p>
+
+  <h3>Sample code</h3>
+  <pre>
+      import { BaseService, HttpFetch } from '@hingejs/services'
+      class MessagesService extends BaseService {
+
+        constructor() {
+          super()
+        }
+
+        getAll() {
+          const URL = 'endpoint-url' // Must be a valid URL
+          new HttpFetch().get(URL).subscribe({
+            error: this.notifyError.bind(this),
+            next: async payload => {
+              if (this._isNewPayload(payload)) {
+                this._payload = payload
+                this._mutatedPayload = await this._modelPayload(payload)
+              }
+              this.announcePayload()
+            },
+          })
+        }
+
+        /* async can be used for a promise.all etc. */
+        async _modelPayload(payload) {
+          const id = msg.messageID
+          const title = msg.messageSummary
+          return {...msg, id, title}
+        }
+
+      }
+
+      export default new MessagesService()
+  </pre>
+</body>
+</html>
