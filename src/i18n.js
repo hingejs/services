@@ -1,9 +1,8 @@
-import Backend from 'i18next-xhr-backend'
 import Debounce from './debounce.js'
+import i18nBackend from 'i18next-xhr-backend'
 import i18next from 'i18next'
 
 const DEFAULT_LOCALE = 'en'
-
 const DEFAULT_DATE_TIME_OPTIONS = {
   day: 'numeric',
   hour: 'numeric',
@@ -15,13 +14,14 @@ const DEFAULT_DATE_TIME_OPTIONS = {
 class I18n {
 
   constructor() {
-    this._attrMap = [
+    this._attributeMap = [
       { attr: 'data-caption', selector: 'data-i18n-caption' },
       { attr: 'placeholder', selector: 'data-i18n-placeholder' },
     ]
+    this._attributeFilters = ['data-i18n', 'data-i18n-placeholder', 'data-i18n-caption']
     this._translator = null
     this._locale = null
-    this._module = i18next
+    this._i18next = i18next
     this._observer = null
   }
 
@@ -29,12 +29,12 @@ class I18n {
     return this._locale
   }
 
-  formatDateTime(date) {
-    return new Date(date).toLocaleDateString(this._locale, DEFAULT_DATE_TIME_OPTIONS)
+  formatDateTime(date, lng = this.getLocale()) {
+    return new Date(date).toLocaleDateString(lng, DEFAULT_DATE_TIME_OPTIONS)
   }
 
-  formatNumber(number) {
-    return new Intl.NumberFormat(this._locale).format(number)
+  formatNumber(number, lng = this.getLocale()) {
+    return new Intl.NumberFormat(lng).format(number)
   }
 
   initSessionLocale() {
@@ -56,13 +56,24 @@ class I18n {
         return
       }
 
-      this._module.use(Backend)
+      this._i18next.use(i18nBackend)
         .init({
           backend: {
             // for all available options read the backend's repository readme file
             loadPath: '/assets/locales/{{lng}}.json'
           },
-          fallbackLng: 'en'
+          fallbackLng: DEFAULT_LOCALE,
+          interpolation: {
+            format: (value, format, lng) => {
+              if (format === 'DateTime' || value instanceof Date) {
+                return this.formatDateTime(value, lng)
+              }
+              if (format === 'FormatNumber') {
+                return this.formatNumber(value, lng)
+              }
+              return value
+            }
+          }
         })
         .then(async () => {
           this._translator = await this.setLocale(this._locale)
@@ -79,16 +90,13 @@ class I18n {
   async setLocale(locale = null) {
     return new Promise(async (resolve, reject) => {
       if (!locale) {
-        locale = window.sessionStorage.getItem('locale')
-      }
-      if (!locale) {
-        locale = DEFAULT_LOCALE
+        locale = window.sessionStorage.getItem('locale') || DEFAULT_LOCALE
       }
       this._locale = locale
       const lang = (locale.length > 2) ? locale.substring(0, 2) : locale
       document.documentElement.setAttribute('lang', lang)
 
-      this._module.changeLanguage(locale)
+      this._i18next.changeLanguage(locale)
         .then(translator => {
           this._translator = translator
           resolve(translator)
@@ -114,21 +122,22 @@ class I18n {
     })
   }
 
-  // One way to do 'static' HTML page translations is with client-side code that scans for a data attribute.
-  // This is an alternative to performing the translations on the back end.
+  /* One way to do 'static' HTML page translations is with client-side code that scans for a data attribute.
+     This is an alternative to performing the translations on the back end.
+  */
   translatePage() {
     const elements = Array.from(document.querySelectorAll('[data-i18n]'))
     elements.forEach(element => {
       const i18nKey = element.dataset.i18n
       element.textContent = this._translator(i18nKey)
     })
-    this._attrMap.forEach(def => this.translateAttribute(def))
+    this._attributeMap.forEach(def => this.translateAttribute(def))
   }
 
   async enableDocumentObserver() {
     if (!this._observer) {
       await this.init()
-      const observerConfig = { attributeFilter: ['data-i18n', 'data-i18n-placeholder', 'data-i18n-caption'], attributes: true, characterData: false, characterDataOldValue: false, childList: true, subtree: true }
+      const observerConfig = { attributeFilter: this._attributeFilters, attributes: true, characterData: false, characterDataOldValue: false, childList: true, subtree: true }
       const translateDebounce = Debounce(() => {
         this._observer.disconnect()
         this.translatePage()
