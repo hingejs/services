@@ -31,8 +31,8 @@
 
   <h3>Working sample</h3>
   <script type="module">
-    import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
-
+    import { I18n } from '../index.js'
+    console.log(I18n)
     (async () => {
       I18n.enableDocumentObserver()
     })()
