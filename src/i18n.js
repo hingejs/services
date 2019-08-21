@@ -1,6 +1,6 @@
-import Backend from './node_modules/i18next-xhr-backend/index.js'
+import Backend from 'i18next-xhr-backend'
 import Debounce from './debounce.js'
-import i18next from './node_modules/i18next/index.js'
+import i18next from 'i18next'
 
 const DEFAULT_LOCALE = 'en'
 
