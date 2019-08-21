@@ -1,0 +1,107 @@
+<html>
+
+<head>
+  <title>&#8762; Hingejs</title>
+</head>
+
+<body>
+  <h1>&#8762; Hingejs</h1>
+  <h2>i18n - internationalization</h2>
+  <blockquote>
+    If your site needs to be translated into various language's, there is
+    a setup with the use of i18next.com.
+  </blockquote>
+
+  <h2><a href="index.html">&#8617; Go Back</a></h2>
+
+  <h3>Sample code</h3>
+
+  <pre>
+
+      &lt;script type="module">
+          import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+
+          (async () => {
+            I18n.enableDocumentObserver()
+          })()
+          &lt;/script>
+          &lt;h1 data-i18n="global:header">&lt;/h1>
+
+  </pre>
+
+  <h3>Working sample</h3>
+  <script type="module">
+    import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+
+    (async () => {
+      I18n.enableDocumentObserver()
+    })()
+  </script>
+  <h1 data-i18n="global:header"></h1>
+
+  <h3>Adding internationalization to a current project</h3>
+  <p>If you are in a current project and now need to add internationalization please follow the steps below</p>
+  <ol>
+    <li>Add a directory called locales to the assets folder: <strong>/assets/<em>locales</em></strong></li>
+    <li>Create a file called <strong>en.json</strong> and add some JSON key/values to start.
+      <pre>
+        {
+          "global:header": "This is the home page",
+        }
+      </pre>
+    </li>
+    <li>Add the following to the <strong>/src/main.js</strong> file
+      <pre>
+          import { I18n } from '@hingejs/services'
+          I18n.enableDocumentObserver()
+      </pre>
+    </li>
+    <li>Now adding the attribute <strong>data-i18n</strong> to html tags will allow the key to be translated
+      <pre>
+          &lt;h1 data-i18n="global:header">&lt;/h1>
+      </pre>
+    </li>
+    <li> Alternatively you can also use Javascript to translate keys
+      <pre>
+          const translate = await I18n.init()
+          let result = translate('global:header')
+      </pre>
+    </li>
+    <li> A custom element can also be created and used.  Note this is not included
+      with the hingeJS web components package
+
+      <pre>
+        // file: components/translate-locale.js
+         import I18n from '@hingejs/services'
+
+         window.customElements.define('translate-locale', class extends HTMLElement {
+
+           constructor() {
+             super()
+           }
+
+           async generateTemplate() {
+             const translate = await I18n.init()
+             return translate(this.innerText)
+           }
+
+           async connectedCallback() {
+             this.innerHTML = await this.generateTemplate()
+           }
+
+         })
+
+      </pre>
+
+      in the HTML
+      <pre>
+          &lt;translate-locale>global:header&lt;/translate-locale>
+      </pre>
+
+    </li>
+  </ol>
+
+
+</body>
+
+</html>

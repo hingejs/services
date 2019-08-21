@@ -1,4 +1,4 @@
-import { HtmlMarker } from './html-marker.js'
+import HtmlMarker from './html-marker.js'
 export default function ModelMixin(Base) {
   return class Model extends Base {
 

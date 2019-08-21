@@ -6,8 +6,8 @@ module.exports = {
     // vendor: Object.keys(package.dependencies)
   },
   output: {
-    filename: '[name].js',
-    path: resolve(__dirname, 'dist')
+    filename: '[name].min.js',
+    path: resolve(__dirname)
   },
   resolve: { extensions: ['.js'] },
   watch: false
