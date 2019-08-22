@@ -25,6 +25,12 @@ https://cdn.jsdelivr.net/npm/@hingejs/services@0.0.3/index.min.js
 import { HtmlMarker } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
 ```
 
+## Webpack
+
+```js
+import { HttpFetch, HtmlMarker, Observable } from '@hingejs/services'
+```
+
 ## Debounce
 
 ```js
