@@ -2,6 +2,11 @@
 
 <head>
   <title>&#8762; Hingejs</title>
+  <style>
+    .demo {
+      color: red;
+    }
+  </style>
 </head>
 
 <body>
@@ -17,27 +22,55 @@
   <h3>Sample code</h3>
 
   <pre>
+    &lt;h1 data-i18n="global:header">&lt;/h1>
+    &lt;button class="en">English&lt;/button>
+    &lt;button class="es-pr">Spanish&lt;/button>
+    &lt;button class="es">Bad Change&lt;/button>
+    &lt;a href="?locale=en">English Link&lt;/a>
+    &lt;a href="?locale=es-pr">Spanish Link&lt;/a>
+    &lt;script type="module">
+      import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+      I18n.enableDocumentObserver()
 
-      &lt;script type="module">
-          import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
+      document.querySelector('button.en').addEventListener('click', () => {
+        I18n.setLocale('en')
+      })
 
-          (async () => {
-            I18n.enableDocumentObserver()
-          })()
-          &lt;/script>
-          &lt;h1 data-i18n="global:header">&lt;/h1>
+      document.querySelector('button.es-pr').addEventListener('click', () => {
+        I18n.setLocale('es-pr')
+      })
+
+      document.querySelector('button.es').addEventListener('click', () => {
+        I18n.setLocale('es')
+      })
+    &lt;/script>
 
   </pre>
 
   <h3>Working sample</h3>
+  <h1 class="demo" data-i18n="global:header"></h1>
+  <button class="en">English</button>
+  <button class="es-pr">Spanish</button>
+  <button class="es">Bad Change</button>
+  <a href="?locale=en">English Link</a>
+  <a href="?locale=es-pr">Spanish Link</a>
   <script type="module">
     import { I18n } from '../index.js'
-    console.log(I18n)
-    (async () => {
-      I18n.enableDocumentObserver()
-    })()
+    I18n.enableDocumentObserver()
+
+    document.querySelector('button.en').addEventListener('click', () => {
+      I18n.setLocale('en')
+    })
+
+    document.querySelector('button.es-pr').addEventListener('click', () => {
+      I18n.setLocale('es-pr')
+    })
+
+    document.querySelector('button.es').addEventListener('click', () => {
+      I18n.setLocale('es')
+    })
   </script>
-  <h1 data-i18n="global:header"></h1>
+
 
   <h3>Adding internationalization to a current project</h3>
   <p>If you are in a current project and now need to add internationalization please follow the steps below</p>
@@ -90,7 +123,6 @@
            }
 
          })
-
       </pre>
 
       in the HTML

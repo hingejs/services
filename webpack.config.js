@@ -5,7 +5,7 @@ module.exports = {
   },
   output: {
     filename: '[name].min.js',
-    path: resolve(__dirname)
+    path: resolve(__dirname, 'dist')
   },
   resolve: { extensions: ['.js'] },
   watch: false

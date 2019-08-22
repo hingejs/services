@@ -1,6 +1,4 @@
 import Debounce from './debounce.js'
-import i18nBackend from 'i18next-xhr-backend'
-import i18next from 'i18next'
 
 const DEFAULT_LOCALE = 'en'
 const DEFAULT_DATE_TIME_OPTIONS = {
@@ -19,69 +17,56 @@ class I18n {
       { attr: 'placeholder', selector: 'data-i18n-placeholder' },
     ]
     this._attributeFilters = ['data-i18n', 'data-i18n-placeholder', 'data-i18n-caption']
-    this._translator = null
-    this._locale = null
-    this._i18next = i18next
+    this._localeId = null
     this._observer = null
+    this._registry = new Map()
+    this._loadPath = 'assets/locales/${lang}.json'
   }
 
-  getLocale() {
-    return this._locale
+  get localeId() {
+    return this._localeId
   }
 
-  formatDateTime(date, lng = this.getLocale()) {
+  set localeId(id) {
+    this._localeId = id
+  }
+
+  get loadPath() {
+    return this._interpolate({
+      params: { lang: this.localeId },
+      template: this._loadPath
+    })
+  }
+
+  set loadPath(url) {
+    this._loadPath = url
+  }
+
+  formatDateTime(date, lng = this.localeId) {
     return new Date(date).toLocaleDateString(lng, DEFAULT_DATE_TIME_OPTIONS)
   }
 
-  formatNumber(number, lng = this.getLocale()) {
+  formatNumber(number, lng = this.localeId) {
     return new Intl.NumberFormat(lng).format(number)
+  }
+
+  _interpolate({ params, template }) {
+    const keys = Object.keys(params)
+    let keyValues = Object.values(params)
+    return new Function(...keys, `return \`${template}\``)(...keyValues)
   }
 
   initSessionLocale() {
     const searchParams = new URLSearchParams(window.location.search)
     const locale = searchParams.get('locale')
     if (locale) {
-      sessionStorage.setItem('locale', locale)
+      window.sessionStorage.setItem('locale', locale)
     }
   }
 
   async init() {
-    return new Promise(async (resolve, reject) => {
-      const priorLocale = this._locale
-      this.initSessionLocale()
-
-      if (this._translator && priorLocale === this._locale) {
-        this._translator = await this.setLocale(this._locale)
-        resolve(this._translator)
-        return
-      }
-
-      this._i18next.use(i18nBackend)
-        .init({
-          backend: {
-            // for all available options read the backend's repository readme file
-            loadPath: '/assets/locales/{{lng}}.json'
-          },
-          fallbackLng: DEFAULT_LOCALE,
-          interpolation: {
-            format: (value, format, lng) => {
-              if (format === 'DateTime' || value instanceof Date) {
-                return this.formatDateTime(value, lng)
-              }
-              if (format === 'FormatNumber') {
-                return this.formatNumber(value, lng)
-              }
-              return value
-            }
-          }
-        })
-        .then(async () => {
-          this._translator = await this.setLocale(this._locale)
-          resolve(this._translator)
-        }).catch(error => {
-          reject(error)
-        })
-    })
+    this.initSessionLocale()
+    return this.setLocale(this.localeId)
   }
 
   /**
@@ -92,19 +77,34 @@ class I18n {
       if (!locale) {
         locale = window.sessionStorage.getItem('locale') || DEFAULT_LOCALE
       }
-      this._locale = locale
-      const lang = (locale.length > 2) ? locale.substring(0, 2) : locale
-      document.documentElement.setAttribute('lang', lang)
-
-      this._i18next.changeLanguage(locale)
-        .then(translator => {
-          this._translator = translator
-          resolve(translator)
-        }).catch(error => {
-          reject(error)
+      const previousLocaleId = this.localeId
+      if (this.localeId !== locale) {
+        this.localeId = locale
+      }
+      if (!this._registry.has(this.localeId)) {
+        const response = await fetch(this.loadPath)
+        if (response.ok) {
+          const responseJSON = await response.clone().json()
+          this._registry.set(this.localeId, responseJSON)
+        } else {
+          this.localeId = previousLocaleId
+          reject(response)
+          return
         }
-        )
+      }
+
+      if (previousLocaleId !== this.localeId && this._registry.has(this.localeId)) {
+        window.sessionStorage.setItem('locale', this.localeId)
+        document.documentElement.setAttribute('lang', this.localeId)
+        this.translatePage()
+      }
+      resolve(this._translator)
     })
+  }
+
+  _translator(i18lKey) {
+    const keys = this._registry.get(this.localeId)
+    return keys && keys.hasOwnProperty(i18lKey) ? keys[i18lKey] : ''
   }
 
   setPageTitle(i18lKey) {
