@@ -1,3 +1,4 @@
+import BaseService from './src/base-service.js'
 import Debounce from './src/debounce.js'
 import FetchInterceptor from './src/fetch-interceptor.js'
 import HtmlMarker from './src/html-marker.js'
@@ -9,6 +10,7 @@ import Router from './src/router.js'
 import SubscriptionMixin from './src/subscription.mixin.js'
 
 export {
+  BaseService,
   Debounce,
   FetchInterceptor,
   HtmlMarker,
