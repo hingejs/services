@@ -2,6 +2,11 @@
 
 Front-End ES6+ Classes used for UI development
 
+#### Related packages
+
+- https://www.npmjs.com/package/@hingejs/generator
+- https://www.npmjs.com/package/@hingejs/webcomponents
+
 ## Install
 
 ```sh
