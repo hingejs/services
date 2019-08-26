@@ -258,4 +258,3 @@ window.customElements.define('table-message', class extends Base {
 
 })
 ```
-
