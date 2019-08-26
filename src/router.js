@@ -51,9 +51,9 @@ class Router {
     return this.$defaultPath ? this._pathToRegex(this.$defaultPath).test(safePath) : false
   }
 
-  historyChange() {
+  async historyChange() {
     if (typeof this._exitFn === 'function') {
-      this._exitFn()
+      await this._exitFn()
     }
     this._exitFn = null
 
