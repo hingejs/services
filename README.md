@@ -206,7 +206,7 @@ window.customElements.define('table-message', class extends Base {
 When updating the component
 
 ```js
-const tableMessage = document.querySelector('table-message)
+const tableMessage = document.querySelector('table-message')
 tableMessage.onModelUpdate({id: 'test', userAction: 'Copy'})
 ```
 
