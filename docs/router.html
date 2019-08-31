@@ -3,12 +3,12 @@
 <head>
   <title>&#8762; Hingejs</title>
   <style>
-    route-link {
+    h-route-link {
       border: 1px solid blue;
       cursor: pointer;
       padding: 1rem;
     }
-    route-link:hover {
+    h-route-link:hover {
       background-color: blue;
       color: white;
     }
@@ -26,27 +26,27 @@
 
   <h3>Working sample</h3>
 
-  <route-link data-route="docs/">
+  <h-route-link data-route="docs/">
     Page1
-  </route-link>
-  <route-link data-route="docs/page2">
+  </h-route-link>
+  <h-route-link data-route="docs/page2">
     Page2
-  </route-link>
+  </h-route-link>
 
-  <route-display></route-display>
+  <h-route-display></h-route-display>
 
   <h3>Sample code</h3>
 
   <h4>HTML</h4>
   <pre>
-      &lt;route-link data-route="docs/">
+      &lt;h-route-link data-route="docs/">
         Page1
-      &lt;/route-link>
-      &lt;route-link data-route="docs/page2">
+      &lt;/h-route-link>
+      &lt;h-route-link data-route="docs/page2">
         Page2
-      &lt;/route-link>
+      &lt;/h-route-link>
 
-      &lt;route-display>&lt;/route-display>
+      &lt;h-route-display>&lt;/h-route-display>
   </pre>
 
   <h4>JavaScript</h4>
@@ -65,13 +65,13 @@
           req.exit(() => {
             console.log('anything you want to do before this function is complete')
           })
-          const routeDisplay = document.querySelector('route-display')
+          const routeDisplay = document.querySelector('h-route-display')
           await routeDisplay.insertContent(HtmlCache.get('page1.html'))
           next()
         }
 
         const RouteCtrlPage2 = async (req, next) => {
-          const routeDisplay = document.querySelector('route-display')
+          const routeDisplay = document.querySelector('h-route-display')
           await routeDisplay.insertContent(HtmlCache.get('page2.html'))
           next()
         }
@@ -97,13 +97,13 @@
       req.exit(() => {
         console.log('anything you want to do before this function is complete')
       })
-      const routeDisplay = document.querySelector('route-display')
+      const routeDisplay = document.querySelector('h-route-display')
       await routeDisplay.insertContent(HtmlCache.get('page1.html'))
       next()
     }
 
     const RouteCtrlPage2 = async (req, next) => {
-      const routeDisplay = document.querySelector('route-display')
+      const routeDisplay = document.querySelector('h-route-display')
       await routeDisplay.insertContent(HtmlCache.get('page2.html'))
       next()
     }

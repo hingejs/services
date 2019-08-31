@@ -148,7 +148,7 @@ subscription.uuid // uuid to identify subscription id
 
 Used for single page routing.  Uses HTML 5 history/popstate.
 
-> Recommended to use in conjunction with web components `route-display` and `route-link`
+> Recommended to use in conjunction with web components `h-route-display` and `h-route-link`
 
 Demo and sample code: https://hingejs.github.io/services/router.html
 
