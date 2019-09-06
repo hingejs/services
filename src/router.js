@@ -188,6 +188,19 @@ class Router {
   removeURLSearchParams() {
     window.history.replaceState({}, document.title, window.location.pathname)
   }
+
+  customElementsDefined() {
+    const undefinedElements = document.querySelectorAll(':not(:defined)')
+    return Promise.all([...undefinedElements].map(
+      elem => window.customElements.whenDefined(elem.localName)
+    ))
+  }
+
+  async waitForCustomElementsDefined(req, next) {
+    await this.customElementsDefined()
+    next()
+  }
+
 }
 
 export default new Router()
