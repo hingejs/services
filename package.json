@@ -1,6 +1,6 @@
 {
   "name": "@hingejs/services",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Front-End ES6+ Classes used for UI development",
   "main": "index.js",
   "scripts": {
