@@ -1,6 +1,6 @@
 // Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
-const path = require('path')
+const { resolve } = require('path')
 
 module.exports = function (config) {
   config.set({
@@ -42,7 +42,7 @@ module.exports = function (config) {
           {
             enforce: 'post',
             exclude: /(node_modules|index\.js|\.spec\.js)$/,
-            include: path.resolve('src/'),
+            include: resolve('src/'),
             test: /\.js$/,
             use: {
               loader: 'istanbul-instrumenter-loader',
@@ -50,6 +50,12 @@ module.exports = function (config) {
             },
           }
         ]
+      },
+      resolve: {
+        alias: {
+          services: resolve(__dirname, '..', 'index.js')
+        },
+        extensions: ['.js']
       },
     },
     webpackMiddleware: {

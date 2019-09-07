@@ -1,4 +1,4 @@
-import { Router } from '../../index.js'
+import { Router } from 'services'
 
 describe('Router', () => {
 
@@ -32,7 +32,7 @@ describe('Router', () => {
       Router.goto('/exit1')
     })
 
-    it('should execute the default path from an unknown path', async (done) => {
+    it('should execute the default path from an unknown path', (done) => {
       Router.defaultPath('/unknown', (req, next) => {
         expect(window.location.href.includes('unknown')).to.be.true
         expect(Router.$defaultPath).to.equal('unknown')

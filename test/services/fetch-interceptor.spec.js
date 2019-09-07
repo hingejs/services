@@ -1,4 +1,4 @@
-import { FetchInterceptor } from '../../index.js'
+import { FetchInterceptor } from 'services'
 
 describe('FetchInterceptor', () => {
 

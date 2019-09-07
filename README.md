@@ -81,6 +81,8 @@ FetchInterceptor.register({
 
 ## HTML-Marker
 
+Component Rendering
+
 Used to render html using string literals and allow updates without using innerHTML. Updates only the variable/model values that have been changed.  Uses html comments with an uuid to find the string literal to change.
 
 Demo and code sample: https://hingejs.github.io/services/html-marker.html
