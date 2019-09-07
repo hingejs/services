@@ -189,15 +189,18 @@ class Router {
     window.history.replaceState({}, document.title, window.location.pathname)
   }
 
-  customElementsDefined() {
+  async customElementsReady(req, next) {
     const undefinedElements = document.querySelectorAll(':not(:defined)')
-    return Promise.all([...undefinedElements].map(
+    const warnUser = window.setTimeout(() => {
+      const remaining = [...document.querySelectorAll(':not(:defined)')]
+        .map(elem => elem.localName)
+        .join()
+      throw new Error(`Timeout: Custom Elements are not defined. ${remaining}`)
+    }, 5000)
+    await Promise.all([...undefinedElements].map(
       elem => window.customElements.whenDefined(elem.localName)
     ))
-  }
-
-  async waitForCustomElementsDefined(req, next) {
-    await this.customElementsDefined()
+    window.clearTimeout(warnUser)
     next()
   }
 
