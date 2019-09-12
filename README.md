@@ -10,6 +10,7 @@ For more information, tips and guides visit:
 
 - https://github.com/hingejs/generator/wiki
 
+
 #### Related packages
 
 - https://www.npmjs.com/package/@hingejs/generator
