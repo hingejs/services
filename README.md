@@ -2,6 +2,14 @@
 
 Front-End ES6+ Classes used for UI development
 
+The services provide core functionality for todays modern web application. You are free to use any services you like, use one or use them all.  They are lightweight yet provide a lot of flexibility.  They are designed for front-end JavaScript application that run on the browser.
+
+### Wiki
+
+For more information, tips and guides visit:
+
+- https://github.com/hingejs/generator/wiki
+
 #### Related packages
 
 - https://www.npmjs.com/package/@hingejs/generator
@@ -12,10 +20,6 @@ Front-End ES6+ Classes used for UI development
 ```sh
 $ npm install @hingejs/services --save
 ```
-
-## Live demos
-
-https://hingejs.github.io/services/
 
 ## CDN
 
@@ -36,13 +40,19 @@ import { HtmlMarker } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index
 import { HttpFetch, HtmlMarker, Observable } from '@hingejs/services'
 ```
 
-## BaseService
+## About the services
+
+### Live demos
+
+> https://hingejs.github.io/services/
+
+### BaseService
 
 This is used injunction with the HingeJS generator to generate a Observable/HttpFetch base class
 
-Sample: https://hingejs.github.io/services/base-service.html
+> Sample: https://hingejs.github.io/services/base-service.html
 
-## Debounce
+### Debounce
 
 ```js
 const translateDebounce = Debounce(() => {
@@ -52,11 +62,11 @@ const translateDebounce = Debounce(() => {
 translateDebounce()
 ```
 
-## FetchInterceptor
+### FetchInterceptor
 
 Interceptor is an object that is invoked at the preprocessing and postprocessing of a request.  So validation/auth errors can be caught globally in the app, such as 500/400 errors and handled in one place.  Recommend to use in the main.js file as it does change the global fetch object (not it's prototype constructor)
 
-Demo and code sample: https://hingejs.github.io/services/fetch-interceptor.html
+> Demo and code sample: https://hingejs.github.io/services/fetch-interceptor.html
 
 ```js
 FetchInterceptor.register({
@@ -79,13 +89,13 @@ FetchInterceptor.register({
 })
 ```
 
-## HTML-Marker
+### HTML-Marker
 
-Component Rendering
+**Component Rendering**
 
 Used to render html using string literals and allow updates without using innerHTML. Updates only the variable/model values that have been changed.  Uses html comments with an uuid to find the string literal to change.
 
-Demo and code sample: https://hingejs.github.io/services/html-marker.html
+> Demo and code sample: https://hingejs.github.io/services/html-marker.html
 
 ```js
 let model = { test: 'this is a test' }
@@ -101,7 +111,9 @@ model.test = 'this is now updated'
 htmlMarker.updateModel(model)
 ```
 
-## Http-Fetch
+> `HtmlMarker` is going to be a key service to easy component building.  
+
+### Http-Fetch
 
 Enhanced version of the native fetch that uses observables
 
@@ -116,13 +128,13 @@ new HttpFetch().get(URL).subscribe({
 })
 ```
 
-## I18n (Internationalization)
+### I18n (Internationalization)
 
 If you need your web application to manage a variety of multiple languages, this service will be needed. This method loads a json based on the locale code and will find attribute based keys to insert the value from the json.
 
-Demo and sample code: https://hingejs.github.io/services/i18n.html
+> Demo and sample code: https://hingejs.github.io/services/i18n.html
 
-## Observable
+### Observable
 
 This uses the publisher / subscription method to execute a registered function.  This is useful for classes that want to send out data to multiple subscriptions to a function you subscribe.
 
@@ -146,22 +158,22 @@ subscription.unsubscribe() // Removes single subscription
 subscription.uuid // uuid to identify subscription id
 ```
 
-## Router
+### Router
 
 Used for single page routing.  Uses HTML 5 history/popstate.
 
 > Recommended to use in conjunction with web components `h-route-display` and `h-route-link`
 
-Demo and sample code: https://hingejs.github.io/services/router.html
+> Demo and sample code: https://hingejs.github.io/services/router.html
 
-## Mixins
+### Mixins
 
 Mixins are methods(functions) and properties that are added to a class to become part of that class.  Often times they are not implemented, but in this case, some of the functions might be.
 
 Related Links
 - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes#Mix-ins
 
-### Model-Mixin
+#### Model-Mixin
 
 The model mixin is to be used with components.  This model mixin allows for a quicker setup to update data and render it to the dom.
 It is important that you have the `get defaultModel()` setup and that the `onModelUpdate()` is implemented.  The `this.htmlMarker` and `this.model` are properties of the mixin.  The `updateModel(obj = {})` will update the model and invoke the `onModelUpdate()` function.  Updating the `this.model` property will not invoke the `onModelUpdate()`.  This was done so that the model can be updated or validated without an infinite call-stack error. 
@@ -212,7 +224,7 @@ const tableMessage = document.querySelector('table-message')
 tableMessage.onModelUpdate({id: 'test', userAction: 'Copy'})
 ```
 
-### Subscription-Mixin
+#### Subscription-Mixin
 
 An easier way to subscribe and unsubscribe to service with a component.  When the component is removed it will unsubscribe to all services in the array.
 
