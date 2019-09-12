@@ -95,7 +95,7 @@ FetchInterceptor.register({
 
 Sample use:
 
-```
+```js
 // main.js
 import { AuthService } from 'services'
 import { FetchInterceptor, HttpFetch, Router } from '@hingejs/services'
@@ -135,6 +135,7 @@ FetchInterceptor.register({
     return Promise.reject(error)
   }
 })
+```
 
 **Remember that this intercepts all fetch calls**
 
