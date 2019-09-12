@@ -54,6 +54,8 @@ This is used injunction with the HingeJS generator to generate a Observable/Http
 
 ### Debounce
 
+Denouncing a function allows you to delay a call as needed.
+
 ```js
 const translateDebounce = Debounce(() => {
   this.translatePage()
@@ -67,6 +69,8 @@ translateDebounce()
 Interceptor is an object that is invoked at the preprocessing and postprocessing of a request.  So validation/auth errors can be caught globally in the app, such as 500/400 errors and handled in one place.  Recommend to use in the main.js file as it does change the global fetch object (not it's prototype constructor)
 
 > Demo and code sample: https://hingejs.github.io/services/fetch-interceptor.html
+
+Base Code
 
 ```js
 FetchInterceptor.register({
@@ -88,6 +92,51 @@ FetchInterceptor.register({
   }
 })
 ```
+
+Sample use:
+
+```
+// main.js
+import { AuthService } from 'services'
+import { FetchInterceptor, HttpFetch, Router } from '@hingejs/services'
+
+FetchInterceptor.register({
+  request: (url, config) => {
+    // Include the auth token in every request
+    const authToken = AuthService.getAuthToken()
+    if (authToken.authorization) {
+      config.headers.set('authorization', authToken.authorization)
+    }
+    // Issues with API's caching, add a timestamp to break the cache
+    // update the url or config before the request is made
+    const cacheBuster = new Date().getTime()
+    url = HttpFetch.addParamsToURL(url, { cacheBuster })
+    return [url, config]
+  },
+  response: response => {
+    // Handle 500 error
+    if (response instanceof Response && response.status === 500) {
+      show500Error()
+    }
+    // Handle 400 errors
+    if (response instanceof Response && (response.status === 403 || response.status === 401)) {
+      // Clone the response since it's referenced
+      const json = await response.clone().json()
+      if (json.hasOwnProperty('code') && json.code === 'Auth token expired') {
+        Router.goto('/logout?code=expired')
+      } else {
+        Router.goto('/logout?code=unauthorized')
+      }
+    }
+    return response
+  },
+  responseError: error => {
+    showResponseError()
+    return Promise.reject(error)
+  }
+})
+
+**Remember that this intercepts all fetch calls**
 
 ### HTML-Marker
 
@@ -154,8 +203,8 @@ MyService.notify(message) // Invokes next function
 MyService.notifyError(message) // Invokes error function
 MyService.complete() // Invokes complete function and removes all  subscribed functions
 
-subscription.unsubscribe() // Removes single subscription
 subscription.uuid // uuid to identify subscription id
+subscription.unsubscribe() // Removes single subscription
 ```
 
 ### Router
@@ -185,7 +234,7 @@ HTML Template: `templates/table-message.html`
 
 JavaScript
 ```js
-import { HtmlCache } from 'services/index.js'
+import { HtmlCache } from 'services'
 import { ModelMixin } from '@hingejs/services'
 const Base = ModelMixin(HTMLElement)
 
@@ -230,7 +279,7 @@ An easier way to subscribe and unsubscribe to service with a component.  When th
 
 JavaScript
 ```js
-import { HtmlCache, TodoService } from 'services/index.js'
+import { HtmlCache, TodoService } from 'services'
 import { ModelMixin, SubscriptionMixin } from '@hingejs/services'
 const Base = SubscriptionMixin(ModelMixin(HTMLElement))
 
