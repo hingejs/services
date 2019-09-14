@@ -32,7 +32,44 @@ export default class HtmlMarker {
     this.referenceNodes = new Set()
     this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
+    /* We need all the values that are needed to render the first pass */
     this.updateModel(defaultModel)
+  }
+
+  updateModel(obj = {}) {
+    Object.assign(this.model, obj)
+    return this.update()
+  }
+
+  /* update all referenced nodes with the model values */
+  update() {
+    this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
+      if (node.nodeType === Node.ELEMENT_NODE && !document.body.contains(node)) {
+        this.referenceNodes.delete(reference)
+      } else {
+        let newValue = this._interpolate({ params: this.model, template: value })
+        if (!isBooleanAttr && newValue !== oldValue) {
+          if (node.nodeType === Node.COMMENT_NODE) {
+            const newNode = this._parseHTML(`<span>${newValue}</span>`)
+            node.parentNode.replaceChild(newNode, node.nextSibling)
+          } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
+            if (node.nodeName === 'class') {
+              newValue = this._handleClassValue({ node, oldValue, value })
+            } else {
+              node.value = newValue
+            }
+            /* textarea is an element node that requires an attribute update */
+          } else if (node.tagName === 'TEXTAREA') {
+            node.value = newValue
+          }
+        }
+        if (isBooleanAttr) {
+          node.toggleAttribute(name, !!newValue.toString().length)
+        }
+        reference.oldValue = newValue
+      }
+    })
+    return Promise.resolve(true)
   }
 
   async render(target, templateString) {
@@ -48,10 +85,7 @@ export default class HtmlMarker {
     return Promise.resolve(true)
   }
 
-  updateModel(obj = {}) {
-    Object.assign(this.model, obj)
-    return this.update()
-  }
+
 
   _fragmentFromString(strHTML) {
     const template = document.createElement('template')
@@ -165,6 +199,7 @@ export default class HtmlMarker {
           }
         })
       }
+
       if (node.nodeType === Node.COMMENT_NODE) {
         if (node.nodeValue.includes(this.uuid)) {
           const nodeValue = node.nodeValue.replace(this.uuid, '')
@@ -179,44 +214,15 @@ export default class HtmlMarker {
     return Promise.resolve(true)
   }
 
-  update() {
-    this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
-      if (!document.body.contains(node)) {
-        this.referenceNodes.delete(reference)
-      } else {
-        let newValue = this._interpolate({ params: this.model, template: value })
-        if (!isBooleanAttr && newValue !== oldValue) {
-          if (node.nodeType === Node.COMMENT_NODE) {
-            const newNode = this._parseHTML(`<span>${newValue}</span>`)
-            node.parentNode.replaceChild(newNode, node.nextSibling)
-          } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
-            if (node.nodeName === 'class') {
-              newValue = this._handleClassValue({ node, oldValue, value })
-            } else {
-              node.value = newValue
-            }
-          } else if (node.tagName === 'TEXTAREA') {
-            node.value = newValue
-          }
-        }
-        if (isBooleanAttr) {
-          node.toggleAttribute(name, !!newValue.toString().length)
-        }
-        reference.oldValue = newValue
-      }
-    })
-    return Promise.resolve(true)
-  }
-
-  _handleClassValue({ node, oldValue = '', value }) {
+  _handleClassValue({ node, oldValue = [], value }) {
     const ownerElement = this._getNodeOwnerElement(node)
-    const values = value.split(' ').filter(cls => null !== cls.match(REGEX_LITERAL))
+    const values = value.match(REGEX_LITERAL)
     let newValFiltered = []
     let newVal = []
 
     if (values) {
       /* remove starting literal values */
-      ownerElement.classList.remove(...values)
+      ownerElement.className = ownerElement.className.replace(REGEX_LITERAL, '')
       newVal = this._interpolate({ params: this.model, template: values.join(' ') })
       newVal = newVal.split(' ').filter(className => className.length)
       if (Array.isArray(newVal)) {
@@ -238,6 +244,8 @@ export default class HtmlMarker {
     return newVal
   }
 
+  /* Allows to find the parent which is not always as simple as node.parentNode
+    mainly for the element an attribute belongs too */
   _getNodeOwnerElement(node) {
     let ownerElement = node.ownerElement
     while (ownerElement && !ownerElement.tagName) {
