@@ -55,7 +55,7 @@
       &lt;script type="module">
         import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services/index.min.js'
 
-        /* using the HingeJS scaffold files will have a way to cache all html pages */
+        /* using the HingeJS scaffold files will have a way to cache all html pages with webpack html-loader */
         const HtmlCache = new Map()
         HtmlCache.set('page1.html', '&lt;template>&lt;p>Page 1&lt;/p>&lt;/template>&lt;style>p { color: red; }&lt;/style>')
         HtmlCache.set('page2.html', '&lt;template>&lt;p>Page 2&lt;/p>&lt;/template>&lt;style>p { color: blue; }&lt;/style>')
@@ -87,7 +87,7 @@
   <script type="module">
     import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services@latest/index.min.js'
 
-    /* using the HingeJS scaffold files will have a way to cache all html pages */
+    /* using the HingeJS scaffold files will have a way to cache all html pages with webpack html-loader */
     const HtmlCache = new Map()
     HtmlCache.set('page1.html', '<template><p>Page 1</p></template><style>p { color: red; }</style>')
     HtmlCache.set('page2.html', '<template><p>Page 2</p></template><style>p { color: blue; }</style>')

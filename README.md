@@ -236,8 +236,8 @@ HTML Template: `templates/table-message.html`
 
 JavaScript
 ```js
-import { HtmlCache } from 'services'
 import { ModelMixin } from '@hingejs/services'
+import HTMLTemplate from 'templates/table-message.html'
 const Base = ModelMixin(HTMLElement)
 
 window.customElements.define('table-message', class extends Base {
@@ -246,12 +246,8 @@ window.customElements.define('table-message', class extends Base {
     super()
   }
 
-  _generateTemplate() {
-    return HtmlCache.get('table-message.html')
-  }
-
   async connectedCallback() {
-    await this.htmlMarker.render(this, this._generateTemplate())
+    await this.htmlMarker.render(this, HTMLTemplate)
   }
 
   get defaultModel() {
@@ -281,8 +277,8 @@ An easier way to subscribe and unsubscribe to service with a component.  When th
 
 JavaScript
 ```js
-import { HtmlCache, TodoService } from 'services'
 import { ModelMixin, SubscriptionMixin } from '@hingejs/services'
+import HTMLTemplate from 'templates/table-message.html'
 const Base = SubscriptionMixin(ModelMixin(HTMLElement))
 
 window.customElements.define('table-message', class extends Base {
@@ -291,12 +287,8 @@ window.customElements.define('table-message', class extends Base {
     super()
   }
 
-  _generateTemplate() {
-    return HtmlCache.get('table-message.html')
-  }
-
   async connectedCallback() {
-    await this.htmlMarker.render(this, this._generateTemplate())
+    await this.htmlMarker.render(this, HTMLTemplate)
     this.subscription = [
       TodoService.subscribe({
         next: this._handlePayload.bind(this)
