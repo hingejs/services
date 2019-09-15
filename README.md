@@ -272,7 +272,7 @@ When updating the component
 
 ```js
 const tableMessage = document.querySelector('table-message')
-tableMessage.onModelUpdate({id: 'test', userAction: 'Copy'})
+tableMessage.updateModel({id: 'test', userAction: 'Copy'})
 ```
 
 #### Subscription-Mixin
