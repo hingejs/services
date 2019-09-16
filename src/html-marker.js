@@ -32,11 +32,20 @@ export default class HtmlMarker {
     this.referenceNodes = new Set()
     this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
+    this._decorators = {
+      _safeHTML: this.safeHTML.bind(this),
+      _unsafeHTML: this.unsafeHTML.bind(this)
+    }
     /* We need all the values that are needed to render the first pass */
     this.updateModel(defaultModel)
   }
 
+  get decorator() {
+    return this._decorators
+  }
+
   updateModel(obj = {}) {
+    obj = this.mapRecursive(obj, this.decorator._safeHTML)
     Object.assign(this.model, obj)
     return this.update()
   }
@@ -129,6 +138,7 @@ export default class HtmlMarker {
       if (node.hasChildNodes()) {
         expressions = expressions.concat(this._markChildNodes(node.childNodes))
       }
+
       if (node.nodeValue && node.nodeValue.trim().length) {
         const matches = node.nodeValue.trim().match(REGEX_LITERAL)
         if (matches) {
@@ -160,8 +170,8 @@ export default class HtmlMarker {
   }
 
   _interpolate({ params, template, useMarkers = false }) {
-    const keys = Object.keys(params)
-    let keyValues = Object.values(params)
+    const keys = Object.keys(params).concat(Object.keys(this.decorator))
+    const keyValues = Object.values(params).concat(Object.values(this.decorator))
     const returnFn = useMarkers ? `function markers (template, ...expressions) {
         return template.reduce((accumulator, part, i) =>
             \`\${accumulator}<!----><span>\${expressions[i - 1]}</span>\${part}\`
@@ -252,5 +262,40 @@ export default class HtmlMarker {
       ownerElement = ownerElement.ownerElement
     }
     return ownerElement
+  }
+
+  safeHTML(input = '') {
+    return typeof input !== 'string' ? input :
+      input.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\//g, '&#x2F;')
+  }
+
+  htmlDecode(input) {
+    const doc = new DOMParser().parseFromString(input, 'text/html')
+    return doc.documentElement.textContent
+  }
+
+  unsafeHTML(input) {
+    const txt = document.createElement('textarea')
+    txt.innerHTML = input
+    return txt.value
+  }
+
+  /* this function will execute a function to object values with a deep nest */
+  mapRecursive(obj, func) {
+    if ((typeof obj !== 'object' && !Array.isArray(obj)) || !obj) {
+      return func(obj)
+    }
+    let accObj = Array.isArray(obj) ? [] : {}
+    const arrObj = Array.isArray(obj) ? [...obj.entries()] : Object.entries(obj)
+    return arrObj.reduce((acc, [key, value]) => {
+      acc[key] = this.mapRecursive(value, func)
+      return acc
+    }, accObj)
   }
 }
