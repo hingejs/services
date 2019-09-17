@@ -33,7 +33,7 @@ export default class HtmlMarker {
     this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
     this._decorators = {
-      _safeHTML: this.safeHTML.bind(this),
+      _removeHTML: this.removeHTML.bind(this),
       _unsafeHTML: this.unsafeHTML.bind(this)
     }
     /* We need all the values that are needed to render the first pass */
@@ -45,7 +45,7 @@ export default class HtmlMarker {
   }
 
   updateModel(obj = {}) {
-    obj = this.mapRecursive(obj, this.decorator._safeHTML)
+    obj = this.mapRecursive(obj, this.safeHTML.bind(this))
     Object.assign(this.model, obj)
     return this.update()
   }
@@ -265,19 +265,19 @@ export default class HtmlMarker {
   }
 
   safeHTML(input = '') {
-    return typeof input !== 'string' ? input :
-      input.toString()
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/\//g, '&#x2F;')
+    return String(input)
+      .replace(/&(?=[^amp;|lt;|gt;|quot;|#])/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/\//g, '&#x2F;')
   }
 
-  htmlDecode(input) {
+  removeHTML(input) {
     const doc = new DOMParser().parseFromString(input, 'text/html')
-    return doc.documentElement.textContent
+    const docEnsure = new DOMParser().parseFromString(doc.documentElement.textContent, 'text/html')
+    return docEnsure.documentElement.textContent
   }
 
   unsafeHTML(input) {
