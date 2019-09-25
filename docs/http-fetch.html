@@ -1,0 +1,30 @@
+<html>
+
+<head>
+  <title>&#8762; Hingejs</title>
+</head>
+
+<body>
+  <h1>&#8762; Hingejs</h1>
+  <h2>HTTP Fetch</h2>
+
+
+  <h3>Working sample</h3>
+  <script type="module">
+    import { HttpFetch } from '../index.js'
+
+    (async () => {
+
+      const results = await new HttpFetch({mode: 'no-cors'}).requestAll([
+        { url: 'http://example.com/', method: 'GET'},
+        { url: 'http://example8d8ds8dsd8sd8', method: 'GET'},
+        { url: 'http://example.com/', method: 'GET'}
+      ])
+
+      console.dir(results)
+
+    })()
+  </script>
+</body>
+
+</html>

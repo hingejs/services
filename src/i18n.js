@@ -1,6 +1,6 @@
 import Debounce from './debounce.js'
 
-const DEFAULT_LOCALE = 'en'
+const DEFAULT_LOCALE = window.navigator.language.split('-').shift()
 const DEFAULT_DATE_TIME_OPTIONS = {
   day: 'numeric',
   hour: 'numeric',
@@ -142,10 +142,10 @@ class I18n {
         this._observer.disconnect()
         this.translatePage()
         this._observer.observe(document, observerConfig)
+        this._observer = new MutationObserver(translateDebounce.bind(this))
+        this._observer.observe(document, observerConfig)
+        translateDebounce()
       })
-      this._observer = new MutationObserver(translateDebounce.bind(this))
-      this._observer.observe(document, observerConfig)
-      translateDebounce()
     }
   }
 

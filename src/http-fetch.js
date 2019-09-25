@@ -1,40 +1,64 @@
-import Observable from './observable.js'
-export default class HttpFetch extends Observable {
+export default class HttpFetch {
 
-  constructor(requestHeaders = {}) {
-    super()
-    this.requestHeaders = requestHeaders
+  constructor(options = {}) {
+    this.requestOptions = options
   }
 
-  async _httpFetch(url, body, verb) {
+  async request({ body = null, params = null, url, method }) {
     const myHeaders = new Headers()
+    method = method.toUpperCase()
 
-    if (typeof this.requestHeaders === 'object') {
-      Object.entries(this.requestHeaders).forEach(([key, value]) => {
+    if (typeof this.requestOptions === 'object' && this.requestOptions.hasOwnProperty('headers')) {
+      Object.entries(this.requestOptions.headers).forEach(([key, value]) => {
         myHeaders.set(key, value)
       })
     }
 
-    let myInit = { cache: 'default', method: verb, mode: 'cors' }
-    myInit.body = body
+    if (params && typeof params === 'object' && Object.keys(params).length) {
+      url = this.constructor.addParamsToURL(url, params)
+    }
+
+    let options = Object.assign({}, { cache: 'default', method, mode: 'cors' }, this.requestOptions)
+    options.body = body
     if (body && !(body instanceof FormData)) {
-      myInit.body = JSON.stringify(body)
+      options.body = JSON.stringify(body)
       myHeaders.set('Content-Type', 'application/json')
     }
-    myInit.headers = myHeaders
+    options.headers = myHeaders
 
-    try {
-      const response = await fetch(url, myInit)
-      const responseText = await response.clone().text()
-      const json = responseText.length ? JSON.parse(responseText) : {}
-      if (response.ok) {
-        this.notify(json)
-      } else {
-        this.notifyError(response)
+    return fetch(url, options)
+  }
+
+  /* This should be removed when support for Promise.allSettled is normal */
+  ensurePromiseAllSettledPolyfill() {
+    if (typeof Promise.allSettled !== 'function') {
+      Promise.allSettled = (iterable) => {
+        return Promise.all(Array.from(iterable, (item) => {
+          const onResolve = (value) => {
+            return { status: 'fulfilled', value }
+          }
+          const onReject = (reason) => {
+            return { status: 'rejected', reason }
+          }
+          try {
+            const itemPromise = Promise.resolve(item)
+            return itemPromise.then(onResolve, onReject)
+          } catch (error) {
+            return Promise.reject(error);
+          }
+        }))
       }
-    } catch (error) {
-      this.notifyError(error)
     }
+  }
+
+  async requestAll(requests, settled = true) {
+    this.ensurePromiseAllSettledPolyfill()
+    return Promise[settled ? 'allSettled' : 'all'](requests.map(async request => this.request(request)))
+  }
+
+  async getAll(requests, settled = true) {
+    requests = requests.map(request => Object.assign({}, request, { method: 'GET' }))
+    return this.requestAll(requests, settled)
   }
 
   static addParamsToURL(url, params = {}) {
@@ -56,51 +80,37 @@ export default class HttpFetch extends Observable {
     return result
   }
 
-  generateUrlParams(params = {}) {
+  static async toJSON(response) {
+    let result = {}
+    try {
+      if (response instanceof Response) {
+        const responseText = await response.clone().text()
+        result = responseText.length ? JSON.parse(responseText) : {}
+      }
+    } catch (error) {
+      result = error
+    }
+
+    return result
+  }
+
+  static generateUrlParams(params = {}) {
     return `?${Object.entries(params).map(param => param.map(window.encodeURIComponent).join('=')).join('&')}`
   }
 
   get(url, params = null) {
-    if (params) {
-      url = this.constructor.addParamsToURL(url, params)
-    }
-    return {
-      subscribe: f => {
-        const unsubscribe = this.subscribe.call(this, f)
-        this._httpFetch(url, null, 'GET')
-        return unsubscribe
-      }
-    }
+    return this.request({ params, url, method: 'GET' })
   }
 
   post(url, body) {
-    return {
-      subscribe: f => {
-        const unsubscribe = this.subscribe.call(this, f)
-        this._httpFetch(url, body, 'POST')
-        return unsubscribe
-      }
-    }
+    return this.request({ body, url, method: 'POST' })
   }
 
   put(url, body) {
-    return {
-      subscribe: f => {
-        const unsubscribe = this.subscribe.call(this, f)
-        this._httpFetch(url, body, 'PUT')
-        return unsubscribe
-      }
-    }
+    return this.request({ body, url, method: 'PUT' })
   }
 
   delete(url) {
-    return {
-      subscribe: f => {
-        const unsubscribe = this.subscribe.call(this, f)
-        this._httpFetch(url, null, 'DELETE')
-        return unsubscribe
-      }
-    }
+    return this.request({ url, method: 'DELETE' })
   }
-
 }
