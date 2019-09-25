@@ -5,6 +5,28 @@ export default class HttpFetch {
     this.requestOptions = options
   }
 
+  /* This should be removed when support for Promise.allSettled is normal */
+  ensurePromiseAllSettledPolyFill() {
+    if (typeof Promise.allSettled !== 'function') {
+      Promise.allSettled = (iterable) => {
+        return Promise.all(Array.from(iterable, item => {
+          const onResolve = (value) => {
+            return { status: 'fulfilled', value }
+          }
+          const onReject = (reason) => {
+            return { status: 'rejected', reason }
+          }
+          try {
+            const itemPromise = Promise.resolve(item)
+            return itemPromise.then(onResolve, onReject)
+          } catch (error) {
+            return Promise.reject(error);
+          }
+        }))
+      }
+    }
+  }
+
   async request({ body = null, params = null, url, method }) {
     const myHeaders = new Headers()
     method = method.toUpperCase()
@@ -29,35 +51,29 @@ export default class HttpFetch {
     return fetch(url, options)
   }
 
-  /* This should be removed when support for Promise.allSettled is normal */
-  ensurePromiseAllSettledPolyFill() {
-    if (typeof Promise.allSettled !== 'function') {
-      Promise.allSettled = (iterable) => {
-        return Promise.all(Array.from(iterable, item => {
-          const onResolve = (value) => {
-            return { status: 'fulfilled', value }
-          }
-          const onReject = (reason) => {
-            return { status: 'rejected', reason }
-          }
-          try {
-            const itemPromise = Promise.resolve(item)
-            return itemPromise.then(onResolve, onReject)
-          } catch (error) {
-            return Promise.reject(error);
-          }
-        }))
-      }
-    }
-  }
-
   async requestAll(requests, settled = true) {
     return Promise[settled ? 'allSettled' : 'all'](requests.map(async request => this.request(request)))
+  }
+
+  get(url, params = null) {
+    return this.request({ params, url, method: 'GET' })
   }
 
   async getAll(requests, settled = true) {
     requests = requests.map(request => Object.assign({}, request, { method: 'GET' }))
     return this.requestAll(requests, settled)
+  }
+
+  post(url, body) {
+    return this.request({ body, url, method: 'POST' })
+  }
+
+  put(url, body) {
+    return this.request({ body, url, method: 'PUT' })
+  }
+
+  delete(url) {
+    return this.request({ url, method: 'DELETE' })
   }
 
   static addParamsToURL(url, params = {}) {
@@ -80,37 +96,17 @@ export default class HttpFetch {
     return result
   }
 
-  static async toJSON(response) {
-    let result = {}
-    try {
-      if (response instanceof Response) {
-        const responseText = await response.clone().text()
-        result = responseText.length ? JSON.parse(responseText) : {}
-      }
-    } catch (error) {
-      result = { error }
-    }
-
-    return result
-  }
-
   static generateUrlParams(params = {}) {
     return `?${Object.entries(params).map(param => param.map(window.encodeURIComponent).join('=')).join('&')}`
   }
 
-  get(url, params = null) {
-    return this.request({ params, url, method: 'GET' })
-  }
+  static async toJSON(response) {
+    let result = {}
+    if (response instanceof Response) {
+      const responseText = await response.clone().text()
+      result = responseText.length ? JSON.parse(responseText) : {}
+    }
 
-  post(url, body) {
-    return this.request({ body, url, method: 'POST' })
-  }
-
-  put(url, body) {
-    return this.request({ body, url, method: 'PUT' })
-  }
-
-  delete(url) {
-    return this.request({ url, method: 'DELETE' })
+    return result
   }
 }

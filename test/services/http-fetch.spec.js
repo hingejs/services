@@ -85,11 +85,16 @@ describe('HttpFetch', () => {
       expect(results).to.be.empty
     })
 
-    it('should expect malformed response to return empty json', async () => {
+    it('should expect malformed response to throw error', async () => {
       const myBlob = new Blob(['{testing '], { type: 'text/plain' })
       const response200 = new Response(myBlob, { status: 200, headers: { 'Content-type': 'text/plain' } })
-      const results = await HttpFetch.toJSON(response200)
-      expect(results).to.have.property('error')
+      let results
+      try {
+        results = await HttpFetch.toJSON(response200)
+      } catch(error) {
+        results = 'error thrown'
+      }
+      expect(results).to.equal('error thrown')
     })
 
     it('should parse params to a url ready string', async () => {
