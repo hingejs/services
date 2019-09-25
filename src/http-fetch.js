@@ -76,6 +76,7 @@ export default class HttpFetch {
     } catch (error) {
       result = url
     }
+
     return result
   }
 
@@ -87,7 +88,7 @@ export default class HttpFetch {
         result = responseText.length ? JSON.parse(responseText) : {}
       }
     } catch (error) {
-      result = error
+      result = {}
     }
 
     return result

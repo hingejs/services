@@ -15,20 +15,28 @@
 
     (async () => {
 
-      const results = await new HttpFetch({ mode: 'no-cors' }).getAll([
+      const httpFetch = new HttpFetch({ mode: 'no-cors' })
+
+      const multiResults = await httpFetch.getAll([
         { url: 'http://example.com/' },
         { url: 'http://example8d8ds8dsd8sd8' },
         { url: 'http://example.com/', params: { test: 'test' } }
       ])
 
-      const resultsJSON = await Promise.all(
-        results
+      const multiResultsJSON = await Promise.all(
+        multiResults
           .filter(({ status }) => status === 'fulfilled')
           .map(async ({ value }) => await HttpFetch.toJSON(value))
       )
 
+      console.dir(multiResults)
+      console.dir(multiResultsJSON)
+
+
+      const results = await httpFetch.get('http://example.com/').then(HttpFetch.toJSON)
+
+
       console.dir(results)
-      console.dir(resultsJSON)
 
     })()
   </script>
