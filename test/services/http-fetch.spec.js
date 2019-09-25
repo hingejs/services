@@ -89,7 +89,7 @@ describe('HttpFetch', () => {
       const myBlob = new Blob(['{testing '], { type: 'text/plain' })
       const response200 = new Response(myBlob, { status: 200, headers: { 'Content-type': 'text/plain' } })
       const results = await HttpFetch.toJSON(response200)
-      expect(results).to.be.empty
+      expect(results).to.have.property('error')
     })
 
     it('should parse params to a url ready string', async () => {
