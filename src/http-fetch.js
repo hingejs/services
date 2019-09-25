@@ -1,18 +1,13 @@
 export default class HttpFetch {
 
   constructor(options = {}) {
+    this.ensurePromiseAllSettledPolyFill()
     this.requestOptions = options
   }
 
   async request({ body = null, params = null, url, method }) {
     const myHeaders = new Headers()
     method = method.toUpperCase()
-
-    if (typeof this.requestOptions === 'object' && this.requestOptions.hasOwnProperty('headers')) {
-      Object.entries(this.requestOptions.headers).forEach(([key, value]) => {
-        myHeaders.set(key, value)
-      })
-    }
 
     if (params && typeof params === 'object' && Object.keys(params).length) {
       url = this.constructor.addParamsToURL(url, params)
@@ -24,16 +19,21 @@ export default class HttpFetch {
       options.body = JSON.stringify(body)
       myHeaders.set('Content-Type', 'application/json')
     }
+    if (typeof this.requestOptions === 'object' && this.requestOptions.hasOwnProperty('headers')) {
+      Object.entries(this.requestOptions.headers).forEach(([key, value]) => {
+        myHeaders.set(key, value)
+      })
+    }
     options.headers = myHeaders
 
     return fetch(url, options)
   }
 
   /* This should be removed when support for Promise.allSettled is normal */
-  ensurePromiseAllSettledPolyfill() {
+  ensurePromiseAllSettledPolyFill() {
     if (typeof Promise.allSettled !== 'function') {
       Promise.allSettled = (iterable) => {
-        return Promise.all(Array.from(iterable, (item) => {
+        return Promise.all(Array.from(iterable, item => {
           const onResolve = (value) => {
             return { status: 'fulfilled', value }
           }
@@ -52,7 +52,6 @@ export default class HttpFetch {
   }
 
   async requestAll(requests, settled = true) {
-    this.ensurePromiseAllSettledPolyfill()
     return Promise[settled ? 'allSettled' : 'all'](requests.map(async request => this.request(request)))
   }
 
