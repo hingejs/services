@@ -24,10 +24,10 @@
 
       (async () => {
         FetchInterceptor.register({
-          request: (url, config) => {
-            // Modify the url or config here
+          request: (url, options) => {
+            // Modify the url or options here
             console.log('fetch request interceptor')
-            return [url, config]
+            return [url, options]
           },
           requestError: error => {
             // Called when an error occurred during another 'request' interceptor call
@@ -58,10 +58,10 @@
 
     (async () => {
       FetchInterceptor.register({
-        request: (url, config) => {
-          // Modify the url or config here
+        request: (url, options) => {
+          // Modify the url or options here
           console.log('fetch request interceptor')
-          return [url, config]
+          return [url, options]
         },
         requestError: error => {
           // Called when an error occurred during another 'request' interceptor call
