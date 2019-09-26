@@ -42,8 +42,9 @@ class I18n {
     this._loadPath = url
   }
 
-  formatDateTime(date, lng = this.localeId) {
-    return new Date(date).toLocaleDateString(lng, DEFAULT_DATE_TIME_OPTIONS)
+  formatDateTime(date, lng = this.localeId, options = {}) {
+    const DATE_TIME_OPTIONS = Object.assign({}, DEFAULT_DATE_TIME_OPTIONS, options)
+    return new Date(date).toLocaleDateString(lng, DATE_TIME_OPTIONS)
   }
 
   formatNumber(number, lng = this.localeId) {

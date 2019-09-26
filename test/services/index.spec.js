@@ -1,4 +1,6 @@
+import './debounce.spec.js'
 import './fetch-interceptor.spec.js'
 import './http-fetch.spec.js'
+import './i18n.spec.js'
 import './observable.spec.js'
 import './router.spec.js'

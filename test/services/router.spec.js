@@ -18,7 +18,7 @@ describe('Router', () => {
       Router.goto('test')
     })
 
-    it('should execute the exit function', async (done) => {
+    it('should execute the exit function', (done) => {
       Router.setPath('/exit1', (req, next) => {
         req.exit(() => {
           expect(true).to.be.true
@@ -41,7 +41,7 @@ describe('Router', () => {
       Router.goto('/null')
     })
 
-    it('should have access to route params', async (done) => {
+    it('should have access to route params', (done) => {
       Router.setPath('/test/:id', (req, next) => {
         expect(req.params.get('id')).to.equal('123')
         done()
@@ -49,13 +49,28 @@ describe('Router', () => {
       Router.goto('/test/123')
     })
 
-    it('should route to optional paths', async (done) => {
+    it('should route to optional paths', (done) => {
       Router.setPath('/optional/:id?', (req, next) => {
         expect(req.params.get('id')).to.be.undefined
         done()
       })
       Router.goto('/optional')
     })
+
+    it('should remove url params if any', () => {
+      Router.goto('/optional?test=tester')
+      expect(window.location.href.includes('test=tester')).to.be.true
+      Router.removeURLSearchParams()
+      expect(window.location.href.includes('test=tester')).to.not.be.true
+    })
+
+    it('should have middleware to ensure custom elements are defined', (done) => {
+      Router.setPath('/customElementsReady', Router.customElementsReady, (req, next) => {
+        done()
+      })
+      Router.goto('/customElementsReady')
+    })
+
 
   })
 })
