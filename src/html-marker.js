@@ -86,9 +86,9 @@ export default class HtmlMarker {
     templateString = templateString.replace(/<!--[\s\S]*?-->/gm, '')
     const rootElement = this._fragmentFromString(templateString)
     const frag = this._markerTree(rootElement)
+    await this._referenceTree(frag)
     if (target) { /* allow for shadowRoot */
       target.appendChild(frag)
-      await this._referenceTree(target)
       await this.update()
     }
     return Promise.resolve(true)
