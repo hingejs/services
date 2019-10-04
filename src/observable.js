@@ -36,12 +36,14 @@ export default class Observable {
     this.completes = new Map()
   }
 
-  notify(msg) {
-    this.observers.forEach(observer => observer(msg))
+  notify() {
+    const args = Array.from(arguments)
+    this.observers.forEach(observer => observer.apply(null, args))
   }
 
-  notifyError(msg) {
-    this.errors.forEach(observer => observer(msg))
+  notifyError() {
+    const args = Array.from(arguments)
+    this.errors.forEach(observer => observer.apply(null, args))
   }
 
 }
