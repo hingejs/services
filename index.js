@@ -8,6 +8,7 @@ import ModelMixin from './src/model.mixin.js'
 import Observable from './src/observable.js'
 import Router from './src/router.js'
 import SubscriptionMixin from './src/subscription.mixin.js'
+import Watch from './src/watch.js'
 
 export {
   BaseService,
@@ -19,5 +20,6 @@ export {
   ModelMixin,
   Observable,
   Router,
-  SubscriptionMixin
+  SubscriptionMixin,
+  Watch
 }
