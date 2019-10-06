@@ -1,10 +1,6 @@
 class Watch {
 
   constructor() {
-    if (this.instance) {
-      return this.instance
-    }
-    this.instance = this
     this.watchers = {}
   }
 
@@ -29,7 +25,7 @@ class Watch {
   }
 
   clear(method) {
-    this.watchers[method] = {}
+    this.watchers[method] = new Map()
   }
 
 }
