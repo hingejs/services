@@ -22,7 +22,7 @@ describe('HttpFetch', () => {
   const DELETE_URL = 'http://example.com/delete'
   const MULTI_GET_URL = [
     { url: GET_URL },
-    { url: GET_URL, params: { test: 'tester' } }
+    { params: { test: 'tester' }, url: GET_URL, }
   ]
 
   beforeEach(() => {
@@ -85,18 +85,6 @@ describe('HttpFetch', () => {
       expect(results).to.be.empty
     })
 
-    it('should expect malformed response to throw error', async () => {
-      const myBlob = new Blob(['{testing '], { type: 'text/plain' })
-      const response200 = new Response(myBlob, { status: 200, headers: { 'Content-type': 'text/plain' } })
-      let results
-      try {
-        results = await HttpFetch.toJSON(response200)
-      } catch(error) {
-        results = 'error thrown'
-      }
-      expect(results).to.equal('error thrown')
-    })
-
     it('should parse params to a url ready string', async () => {
       const PARAMS = {one:1, two:2}
       const results = await HttpFetch.generateUrlParams(PARAMS)
@@ -107,7 +95,6 @@ describe('HttpFetch', () => {
       const results = await HttpFetch.generateUrlParams()
       expect(results).to.equal('?')
     })
-
 
     it('should get results from a url', async () => {
       const results = await httpFetch.get(GET_URL).then(HttpFetch.toJSON)
@@ -121,13 +108,13 @@ describe('HttpFetch', () => {
 
     it('should post data to a url', async () => {
       const formData = new FormData()
-      formData.append('username', 'Tester');
+      formData.append('username', 'Tester')
       const results = await httpFetch.post(POST_URL, formData).then(HttpFetch.toJSON)
       expect(results).to.deep.equal({test:'testing'})
     })
 
     it('should put data to a url', async () => {
-      const data = {data:'value'}
+      const data = {data: 'value'}
       const results = await httpFetch.put(PUT_URL, data).then(HttpFetch.toJSON)
       expect(results).to.deep.equal({test:'testing'})
     })
@@ -136,7 +123,6 @@ describe('HttpFetch', () => {
       const results = await httpFetch.delete(DELETE_URL).then(HttpFetch.toJSON)
       expect(results).to.deep.equal({test:'testing'})
     })
-
 
     it('should add header options when defined from the constructor', async () => {
       const http = new HttpFetch({headers: { authorization: 'Basic xyz'}})
@@ -162,8 +148,5 @@ describe('HttpFetch', () => {
       )
       expect(multiResultsJSON).to.deep.equal([{test: 'testing'},{test: 'tester'}])
     })
-
-
   })
-
 })

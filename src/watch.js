@@ -1,31 +1,33 @@
 class Watch {
 
   constructor() {
-    this.watchers = {}
+    this.invokers = {}
   }
 
   register(obj, method, invoke) {
-      if(!this.watchers.hasOwnProperty(method)) {
-          this.watchers[method] = new Map()
-          const original = obj[method]
-          obj[method] = (...args) => {
-              this.watchers[method].forEach(invoke => invoke())
-              return original.apply(obj, args)
-          }
+    const hash = this._generateHash(obj, method)
+    if (!this.invokers.hasOwnProperty(hash)) {
+      this.invokers[hash] = new Map()
+      const original = obj[method]
+      obj[method] = (...args) => {
+        this.invokers[hash].forEach(invoke => invoke())
+        return original.apply(obj, args)
       }
-      const uid = new Date().getTime().toString(36) + performance.now()
-      if (typeof invoke === 'function') {
-          this.watchers[method].set(uid, invoke)
-      }
-    return { unregister: this.unregister.bind(this, method, uid) }
+    }
+    const uid = new Date().getTime().toString(36) + performance.now()
+    if (typeof invoke === 'function') {
+      this.invokers[hash].set(uid, invoke)
+    }
+    return { uid, unregister: this.invokers[hash].delete.bind(this.invokers[hash], uid) }
   }
 
-  unregister(method, uid) {
-    this.watchers[method].delete(uid)
+  _generateHash(obj, method) {
+    return window.btoa(obj.constructor.name + method)
   }
 
-  clear(method) {
-    this.watchers[method] = new Map()
+  clear(obj, method) {
+    const hash = this._generateHash(obj, method)
+    this.invokers[hash] = new Map()
   }
 
 }
