@@ -15,7 +15,9 @@
 
     (async () => {
 
-      const httpFetch = new HttpFetch({ mode: 'no-cors' })
+
+      let abortController = new AbortController()
+      let httpFetch = new HttpFetch({ mode: 'no-cors', signal: abortController.signal })
 
       const multiResults = await httpFetch.getAll([
         { url: 'http://example.com/' },
@@ -32,10 +34,21 @@
       console.dir(multiResults)
       console.dir(multiResultsJSON)
 
+      // abort call before making the same call
+      abortController.abort()
+      httpFetch.get('http://example.com/').catch(error => {
+        if (error.name === 'AbortError') {
+          console.log('Aborted Call')
+        }
+        console.dir(error)
+      })
+
+      abortController = new AbortController()
+      httpFetch = new HttpFetch({ mode: 'no-cors', signal: abortController.signal })
+
+
 
       const results = await httpFetch.get('http://example.com/').then(HttpFetch.toJSON)
-
-
       console.dir(results)
 
     })()
