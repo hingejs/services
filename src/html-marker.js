@@ -1,5 +1,5 @@
 const REGEX_LITERAL = /(\${.+?})/gi
-const BOOLEAN_ATTRIBUTES = [
+const BOOLEAN_ATTRIBUTES = new Set([
   'allowfullscreen',
   'allowpaymentrequest',
   'async',
@@ -25,60 +25,34 @@ const BOOLEAN_ATTRIBUTES = [
   'reversed',
   'selected',
   'typemustmatch'
-]
+])
 
 export default class HtmlMarker {
   constructor(defaultModel) {
     this.referenceNodes = new Set()
     this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
-    this._decorators = {
-      _removeHTML: this.removeHTML.bind(this),
-      _unsafeHTML: this.unsafeHTML.bind(this)
-    }
+    this._decorators = new Map([
+      ['$_removeHTML', this.removeHTML.bind(this)],
+      ['$_unsafeHTML', this.unsafeHTML.bind(this)]
+    ])
     /* We need all the values that are needed to render the first pass */
     this.updateModel(defaultModel)
   }
 
-  get decorator() {
+  get decorators() {
     return this._decorators
+  }
+
+  addDecorator(name, func) {
+    this._decorators.set(name, func)
+    return this
   }
 
   updateModel(obj = {}) {
     obj = this.mapRecursive(obj, this.safeHTML.bind(this))
     Object.assign(this.model, obj)
     return this.update()
-  }
-
-  /* update all referenced nodes with the model values */
-  update() {
-    this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
-      if (node.nodeType === Node.ELEMENT_NODE && !document.body.contains(node)) {
-        this.referenceNodes.delete(reference)
-      } else {
-        let newValue = this._interpolate({ params: this.model, template: value })
-        if (!isBooleanAttr && newValue !== oldValue) {
-          if (node.nodeType === Node.COMMENT_NODE) {
-            const newNode = this._parseHTML(`<span>${newValue}</span>`)
-            node.parentNode.replaceChild(newNode, node.nextSibling)
-          } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
-            if (node.nodeName === 'class') {
-              newValue = this._handleClassValue({ node, oldValue, value })
-            } else {
-              node.value = newValue
-            }
-            /* textarea is an element node that requires an attribute update */
-          } else if (node.tagName === 'TEXTAREA') {
-            node.value = newValue
-          }
-        }
-        if (isBooleanAttr) {
-          node.toggleAttribute(name, !!newValue.toString().length)
-        }
-        reference.oldValue = newValue
-      }
-    })
-    return Promise.resolve(true)
   }
 
   async render(target, templateString) {
@@ -170,8 +144,8 @@ export default class HtmlMarker {
   }
 
   _interpolate({ params, template, useMarkers = false }) {
-    const keys = Object.keys(params).concat(Object.keys(this.decorator))
-    const keyValues = Object.values(params).concat(Object.values(this.decorator))
+    const keys = Object.keys(params).concat([...this.decorators.keys()])
+    const keyValues = Object.values(params).concat([...this.decorators.values()])
     const returnFn = useMarkers ? `function markers (template, ...expressions) {
         return template.reduce((accumulator, part, i) =>
             \`\${accumulator}<!----><span>\${expressions[i - 1]}</span>\${part}\`
@@ -194,7 +168,7 @@ export default class HtmlMarker {
         const attrs = [...node.attributes]
         attrs.forEach(attr => {
           const hasLiteral = attr.value.match(REGEX_LITERAL)
-          const isBooleanAttr = BOOLEAN_ATTRIBUTES.includes(attr.name)
+          const isBooleanAttr = BOOLEAN_ATTRIBUTES.has(attr.name)
           if (hasLiteral) {
             this.referenceNodes.add({
               isBooleanAttr,
@@ -221,6 +195,33 @@ export default class HtmlMarker {
         }
       }
     }
+    return Promise.resolve(true)
+  }
+
+   /* update all referenced nodes with the model values */
+   update() {
+    this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
+      let newValue = this._interpolate({ params: this.model, template: value })
+      if (!isBooleanAttr && newValue !== oldValue) {
+        if (node.nodeType === Node.COMMENT_NODE) {
+          const newNode = this._parseHTML(`<span>${newValue}</span>`)
+          node.parentNode.replaceChild(newNode, node.nextSibling)
+        } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
+          if (node.nodeName === 'class') {
+            newValue = this._handleClassValue({ node, oldValue, value })
+          } else {
+            node.value = newValue
+          }
+          /* textarea is an element node that requires an attribute update */
+        } else if (node.tagName === 'TEXTAREA') {
+          node.value = newValue
+        }
+      }
+      if (isBooleanAttr) {
+        node.toggleAttribute(name, !!newValue.toString().length)
+      }
+      reference.oldValue = newValue
+    })
     return Promise.resolve(true)
   }
 
