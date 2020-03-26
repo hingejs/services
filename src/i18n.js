@@ -16,11 +16,13 @@ class I18n {
       { attr: 'data-caption', selector: 'data-i18n-caption' },
       { attr: 'placeholder', selector: 'data-i18n-placeholder' },
     ]
-    this._attributeFilters = ['data-i18n', 'data-i18n-placeholder', 'data-i18n-caption']
+    this._attributeFilters = new Set(['data-i18n', 'data-i18n-unsafe', 'data-i18n-placeholder', 'data-i18n-caption'])
     this._localeId = null
     this._observer = null
-    this._registry = new Map()
-    this._loadPath = 'assets/locales/${lang}.json'
+    this._dictionary = new Map()
+    const pathRegex = new RegExp(/^.*\//)
+    this._initialBasePath = pathRegex.exec(window.location.href)[0] || ''
+    this._loadPath = this._initialBasePath + 'assets/locales/${lang}.json'
   }
 
   get localeId() {
@@ -43,7 +45,7 @@ class I18n {
   }
 
   formatDateTime(date, lng = this.localeId, options = {}) {
-    const DATE_TIME_OPTIONS = Object.assign({}, DEFAULT_DATE_TIME_OPTIONS, options)
+    const DATE_TIME_OPTIONS = { ...DEFAULT_DATE_TIME_OPTIONS, ...options }
     return new Date(date).toLocaleDateString(lng, DATE_TIME_OPTIONS)
   }
 
@@ -74,37 +76,34 @@ class I18n {
    * Sets the local based on a language key stored in session.
    */
   async setLocale(locale = null) {
-    return new Promise(async (resolve, reject) => {
-      if (!locale) {
-        locale = window.sessionStorage.getItem('locale') || DEFAULT_LOCALE
+    if (!locale) {
+      locale = window.sessionStorage.getItem('locale') || DEFAULT_LOCALE
+    }
+    const previousLocaleId = this.localeId
+    if (this.localeId !== locale) {
+      this.localeId = locale
+    }
+    if (!this._dictionary.has(this.localeId)) {
+      const response = await fetch(this.loadPath)
+      if (response.ok) {
+        const responseJSON = await response.clone().json()
+        this._dictionary.set(this.localeId, responseJSON)
+      } else {
+        this.localeId = previousLocaleId
+        return response
       }
-      const previousLocaleId = this.localeId
-      if (this.localeId !== locale) {
-        this.localeId = locale
-      }
-      if (!this._registry.has(this.localeId)) {
-        const response = await fetch(this.loadPath)
-        if (response.ok) {
-          const responseJSON = await response.clone().json()
-          this._registry.set(this.localeId, responseJSON)
-        } else {
-          this.localeId = previousLocaleId
-          reject(response)
-          return
-        }
-      }
+    }
 
-      if (previousLocaleId !== this.localeId && this._registry.has(this.localeId)) {
-        window.sessionStorage.setItem('locale', this.localeId)
-        document.documentElement.setAttribute('lang', this.localeId)
-        this.translatePage()
-      }
-      resolve(this._translator)
-    })
+    if (previousLocaleId !== this.localeId && this._dictionary.has(this.localeId)) {
+      window.sessionStorage.setItem('locale', this.localeId)
+      document.documentElement.setAttribute('lang', this.localeId)
+      this.translatePage()
+    }
+    return this._translator
   }
 
   _translator(i18lKey) {
-    const keys = this._registry.get(this.localeId)
+    const keys = this._dictionary.get(this.localeId)
     return keys && keys.hasOwnProperty(i18lKey) ? keys[i18lKey] : ''
   }
 
@@ -120,6 +119,7 @@ class I18n {
     elements.forEach(element => {
       const attribute = element.getAttribute(selector)
       element.setAttribute(attr, this._translator(attribute))
+      this._ensureDirAttribute(element)
     })
   }
 
@@ -131,14 +131,28 @@ class I18n {
     elements.forEach(element => {
       const i18nKey = element.dataset.i18n
       element.textContent = this._translator(i18nKey)
+      this._ensureDirAttribute(element)
+    })
+    const elementsUnsafe = Array.from(document.querySelectorAll('[data-i18n-unsafe]'))
+    elementsUnsafe.forEach(element => {
+      const i18nKey = element.dataset.i18nUnsafe
+      element.innerHTML = this._translator(i18nKey)
+      this._ensureDirAttribute(element)
     })
     this._attributeMap.forEach(def => this.translateAttribute(def))
+  }
+
+  /* Ensure the text displayed is shown in the correct direction */
+  _ensureDirAttribute(element) {
+    if(!element.getAttribute('dir')){
+      element.setAttribute('dir', 'auto')
+    }
   }
 
   async enableDocumentObserver() {
     if (!this._observer) {
       await this.init()
-      const observerConfig = { attributeFilter: this._attributeFilters, attributes: true, characterData: false, characterDataOldValue: false, childList: true, subtree: true }
+      const observerConfig = { attributeFilter: [...this._attributeFilters], attributes: true, characterData: false, characterDataOldValue: false, childList: true, subtree: true }
       const translateDebounce = Debounce(() => {
         this._observer.disconnect()
         this.translatePage()
