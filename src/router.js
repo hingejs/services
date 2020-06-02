@@ -6,6 +6,7 @@ class Router {
     }
     this.instance = this
     this._paths = new Map()
+    this._all_path_handlers = new Set()
     this._basePath = window.location.origin
     this._exitFn = null
     this.paramRegex = /[:](\w+)/
@@ -72,6 +73,7 @@ class Router {
     let req = {
       exit: this._exit.bind(this),
       params: this._pathParams(route),
+      route,
       search: new URLSearchParams(window.location.search)
     }
     const pipeNext = callbacks => {
@@ -83,7 +85,8 @@ class Router {
       }
     }
     if (Array.isArray(handlers)) {
-      pipeNext(handlers.slice())
+      const allHandlers = [...this._all_path_handlers].concat(handlers)
+      pipeNext(allHandlers.slice())
     }
   }
 
@@ -187,6 +190,16 @@ class Router {
 
   removeURLSearchParams() {
     window.history.replaceState({}, document.title, window.location.pathname)
+  }
+
+  /**
+   * Executes for all routes as pre-middleware
+   * @param {function} fn (req, next) => { }
+   */
+  use(fn) {
+    if(typeof fn === 'function') {
+      this._all_path_handlers.add(fn)
+    }
   }
 
   async customElementsReady(req, next) {
