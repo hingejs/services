@@ -1,3 +1,4 @@
+const PARAM_REGEX = /[:](\w+)/
 class Router {
 
   constructor() {
@@ -6,15 +7,14 @@ class Router {
     }
     this.instance = this
     this._paths = new Map()
-    this._all_path_handlers = new Set()
+    this._allPathHandlers = new Set()
     this._basePath = window.location.origin
     this._exitFn = null
-    this.paramRegex = /[:](\w+)/
     this.lastRoutePath = window.sessionStorage.getItem('last-route-path') || ''
     this.historyChangeBind = this.historyChange.bind(this)
     window.addEventListener('url-change', this.historyChangeBind)
     window.addEventListener('popstate', this.historyChangeBind)
-    this.$defaultPath
+    this.$defaultPath = ''
 
     const path = this.urlFullPath()
     window.addEventListener('load', this.goto.bind(this, path))
@@ -25,7 +25,7 @@ class Router {
   }
 
   getRoute() {
-    let currentPath = this.getAdjustedPath(this.getCurrentPath())
+    const currentPath = this.getAdjustedPath(this.getCurrentPath())
     return [...this._paths.keys()]
       .map(this.fromBase64.bind(this))
       .find(routeRE => this._pathToRegex(routeRE).test(currentPath))
@@ -69,8 +69,8 @@ class Router {
     }
     this.lastRoutePath = fullPath
 
-    let handlers = this.getPath(route)
-    let req = {
+    const handlers = this.getPath(route)
+    const req = {
       exit: this._exit.bind(this),
       params: this._pathParams(route),
       route,
@@ -85,7 +85,7 @@ class Router {
       }
     }
     if (Array.isArray(handlers)) {
-      const allHandlers = [...this._all_path_handlers].concat(handlers)
+      const allHandlers = [...this._allPathHandlers].concat(handlers)
       pipeNext(allHandlers.slice())
     }
   }
@@ -140,11 +140,10 @@ class Router {
     return this
   }
 
-  defaultPath(path, ...callbacks) {
+  defaultPath(path) {
     path = this.getAdjustedPath(path)
     if (path.length) {
       this.$defaultPath = path
-      this.setPath(this.$defaultPath, ...callbacks)
     }
     return this
   }
@@ -168,17 +167,17 @@ class Router {
   _pathToRegex(path = '') {
     const pattern = this.getAdjustedPath(path).split('/')
       .filter(pathName => pathName.length)
-      .map(pathName => this.paramRegex.test(pathName) ? `([\\w\\s&!$*:\\-+]+)${pathName.includes('?') ? '?' : ''}` : pathName)
+      .map(pathName => PARAM_REGEX.test(pathName) ? `([\\w\\s&!$*:\\-+]+)${pathName.includes('?') ? '?' : ''}` : pathName)
       .join('/?')
     return new RegExp(`^/?${pattern || '/'}/?$`)
   }
 
   _pathParams(path = '') {
-    const paramRegexGlobal = /[:](\w+)/g
-    const matches = path.match(paramRegexGlobal)
+    const PARAM_REGEX_GLOBAL = new RegExp(PARAM_REGEX, 'g')
+    const matches = path.match(PARAM_REGEX_GLOBAL)
     const currentPath = this.getAdjustedPath(this.getCurrentPath())
     const routeParams = currentPath.match(this._pathToRegex(path))
-    let params = new Map()
+    const params = new Map()
     if (matches && routeParams) {
       routeParams.shift()
       matches.map(param => param.replace(':', '')).forEach(param => {
@@ -198,7 +197,7 @@ class Router {
    */
   use(fn) {
     if(typeof fn === 'function') {
-      this._all_path_handlers.add(fn)
+      this._allPathHandlers.add(fn)
     }
   }
 

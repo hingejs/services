@@ -76,7 +76,8 @@
           next()
         }
 
-        Router.defaultPath('docs/', RouteCtrlPage1)
+        Router.defaultPath('docs/')
+        Router.setPath('docs/', RouteCtrlPage1)
         Router.setPath('docs/page2', RouteCtrlPage2)
 
       &lt;/script>
@@ -108,7 +109,8 @@
       next()
     }
 
-    Router.defaultPath('docs/', RouteCtrlPage1)
+    Router.defaultPath('docs/')
+    Router.setPath('docs/', RouteCtrlPage1)
     Router.setPath('docs/page2', RouteCtrlPage2)
 
   </script>
