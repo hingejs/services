@@ -12,12 +12,20 @@ class Router {
     this._exitFn = null
     this.lastRoutePath = window.sessionStorage.getItem('last-route-path') || ''
     this.historyChangeBind = this.historyChange.bind(this)
-    window.addEventListener('url-change', this.historyChangeBind)
+    this.routeChangeEventName = 'route-change'
     window.addEventListener('popstate', this.historyChangeBind)
     this.$defaultPath = ''
 
     const path = this.urlFullPath()
     window.addEventListener('load', this.goto.bind(this, path))
+  }
+
+  set routeChangeEventName(eventName) {
+    if(eventName.length) {
+      window.removeEventListener(this._routeChangeEventName, this.historyChangeBind)
+      this._routeChangeEventName = eventName
+      window.addEventListener(this._routeChangeEventName, this.historyChangeBind)
+    }
   }
 
   getCurrentPath() {
@@ -96,7 +104,7 @@ class Router {
 
   goto(path, title = '') {
     window.history.pushState(path, title, `${this.basePath}${this.urlFullPath(path)}`)
-    window.dispatchEvent(new CustomEvent('url-change', { detail: path }))
+    window.dispatchEvent(new CustomEvent(this._routeChangeEventName, { detail: path }))
     return this
   }
 
