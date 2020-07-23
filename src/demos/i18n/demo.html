@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Localization Demo</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            main {
+                min-height: 100vh;
+            }
+
+            .demo {
+                color: red;
+            }
+
+            html[lang="en"] body {
+                background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
+            }
+
+            html[lang="en"] .demo {
+                color: green;
+            }
+
+            html[lang="ar"] body {
+                background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+
+            html[lang="es-pr"] body {
+                background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h3>Localization Demo</h3>
+            <h1 class="demo" data-i18n="global:header"></h1>
+            <button class="en">English</button>
+            <button class="es-pr">Spanish</button>
+            <button class="ar">Arabic</button>
+        </main>
+        <script type="module">
+            import I18n from '../../i18n.js'
+            I18n.loadPath = 'locales/'
+            I18n.enableDocumentObserver()
+
+
+            document.querySelector('button.en').addEventListener('click', () => {
+              I18n.setLocale('en')
+            })
+
+            document.querySelector('button.es-pr').addEventListener('click', () => {
+              I18n.setLocale('es-pr')
+            })
+
+            document.querySelector('button.ar').addEventListener('click', () => {
+              I18n.setLocale('ar')
+            })
+          </script>
+    </body>
+</html>
+

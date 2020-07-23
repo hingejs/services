@@ -1,6 +1,6 @@
 import Debounce from './debounce.js'
 
-const DEFAULT_LOCALE = window.navigator.language.split('-').shift()
+const DEFAULT_LOCALE = globalThis.navigator.language.split('-').shift()
 const DEFAULT_DATE_TIME_OPTIONS = {
   day: 'numeric',
   hour: 'numeric',
@@ -8,6 +8,9 @@ const DEFAULT_DATE_TIME_OPTIONS = {
   month: 'short',
   year: 'numeric'
 }
+
+const STORAGE_KEY = 'i18nLocale'
+const URL_PARAM_KEY = 'locale'
 
 class I18n {
 
@@ -21,7 +24,7 @@ class I18n {
     this._observer = null
     this._dictionary = new Map()
     const pathRegex = new RegExp(/^.*\//)
-    this._initialBasePath = pathRegex.exec(window.location.href)[0] || ''
+    this._initialBasePath = pathRegex.exec(globalThis.location.href)[0] || ''
     this._loadPath = this._initialBasePath + 'assets/locales/${lang}.json'
   }
 
@@ -30,7 +33,11 @@ class I18n {
   }
 
   set localeId(id) {
-    this._localeId = id
+    if (id) {
+      this._localeId = id
+      globalThis.sessionStorage.setItem(STORAGE_KEY, this.localeId)
+      document.documentElement.setAttribute('lang', this.localeId)
+    }
   }
 
   get loadPath() {
@@ -41,7 +48,7 @@ class I18n {
   }
 
   set loadPath(url) {
-    this._loadPath = url
+    this._loadPath = globalThis.decodeURIComponent(new URL(url + '${lang}.json',  this._initialBasePath))
   }
 
   formatDateTime(date, lng = this.localeId, options = {}) {
@@ -60,10 +67,10 @@ class I18n {
   }
 
   initSessionLocale() {
-    const searchParams = new URLSearchParams(window.location.search)
-    const locale = searchParams.get('locale')
+    const searchParams = new URLSearchParams(globalThis.location.search)
+    const locale = searchParams.get(URL_PARAM_KEY)
     if (locale) {
-      window.sessionStorage.setItem('locale', locale)
+      this.localeId = locale
     }
   }
 
@@ -77,7 +84,7 @@ class I18n {
    */
   async setLocale(locale = null) {
     if (!locale) {
-      locale = window.sessionStorage.getItem('locale') || DEFAULT_LOCALE
+      locale = globalThis.sessionStorage.getItem(STORAGE_KEY) || DEFAULT_LOCALE
     }
     const previousLocaleId = this.localeId
     if (this.localeId !== locale) {
@@ -95,8 +102,6 @@ class I18n {
     }
 
     if (previousLocaleId !== this.localeId && this._dictionary.has(this.localeId)) {
-      window.sessionStorage.setItem('locale', this.localeId)
-      document.documentElement.setAttribute('lang', this.localeId)
       this.translatePage()
     }
     return this._translator
@@ -144,24 +149,36 @@ class I18n {
 
   /* Ensure the text displayed is shown in the correct direction */
   _ensureDirAttribute(element) {
-    if(!element.getAttribute('dir')){
+    if (!element.getAttribute('dir')) {
       element.setAttribute('dir', 'auto')
     }
   }
 
   async enableDocumentObserver() {
-    if (!this._observer) {
+    if (!this.isObserverEnabled()) {
       await this.init()
       const observerConfig = { attributeFilter: [...this._attributeFilters], attributes: true, characterData: false, characterDataOldValue: false, childList: true, subtree: true }
       const translateDebounce = Debounce(() => {
         this._observer.disconnect()
         this.translatePage()
         this._observer.observe(document, observerConfig)
-        this._observer = new MutationObserver(translateDebounce.bind(this))
-        this._observer.observe(document, observerConfig)
-        translateDebounce()
       })
+      this._observer = new MutationObserver(translateDebounce.bind(this))
+      this._observer.observe(document, observerConfig)
+      this.translatePage()
     }
+  }
+
+  disconnectObserver() {
+    if (this.isObserverEnabled()) {
+      this._observer.disconnect()
+    }
+    this._observer = null
+    return this
+  }
+
+  isObserverEnabled() {
+    return this._observer instanceof MutationObserver
   }
 
 }
