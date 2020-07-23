@@ -26,6 +26,7 @@ class I18n {
     const pathRegex = new RegExp(/^.*\//)
     this._initialBasePath = pathRegex.exec(globalThis.location.href)[0] || ''
     this._loadPath = 'assets/locales'
+    this._pending = null
   }
 
   get localeId() {
@@ -33,15 +34,13 @@ class I18n {
   }
 
   set localeId(id) {
-    if (id) {
-      this._localeId = id
-      globalThis.sessionStorage.setItem(STORAGE_KEY, this.localeId)
-      document.documentElement.setAttribute('lang', this.localeId)
-    }
+    this._localeId = id
+    globalThis.sessionStorage.setItem(STORAGE_KEY, this.localeId)
+    document.documentElement.setAttribute('lang', this.localeId)
   }
 
   get loadPath() {
-    return globalThis.decodeURIComponent(new URL(`${this._loadPath}/${this.localeId}.json`,  this._initialBasePath))
+    return globalThis.decodeURIComponent(new URL(`${this._loadPath}/${this.localeId}.json`, this._initialBasePath))
   }
 
   set loadPath(url) {
@@ -59,7 +58,7 @@ class I18n {
 
   initSessionLocale() {
     const searchParams = new URLSearchParams(globalThis.location.search)
-    const locale = searchParams.get(URL_PARAM_KEY)
+    const locale = searchParams.get(URL_PARAM_KEY) || globalThis.sessionStorage.getItem(STORAGE_KEY)
     if (locale) {
       this.localeId = locale
     }
@@ -75,27 +74,28 @@ class I18n {
    */
   async setLocale(locale = null) {
     if (!locale) {
-      locale = globalThis.sessionStorage.getItem(STORAGE_KEY) || DEFAULT_LOCALE
+      locale = DEFAULT_LOCALE
     }
-    const previousLocaleId = this.localeId
-    if (this.localeId !== locale) {
-      this.localeId = locale
-    }
-    if (!this._dictionary.has(this.localeId)) {
-      const response = await fetch(this.loadPath)
-      if (response.ok) {
-        const responseJSON = await response.clone().json()
-        this._dictionary.set(this.localeId, responseJSON)
-      } else {
-        this.localeId = previousLocaleId
-        return response
-      }
-    }
+    this.localeId = locale
 
-    if (previousLocaleId !== this.localeId && this._dictionary.has(this.localeId)) {
+    this._pending = new Promise(async (resolve, reject) => {
+      if (!this._dictionary.get(this.localeId)) {
+        const response = await fetch(this.loadPath).catch(reject)
+        let responseJSON = null
+        if (response.ok) {
+          responseJSON = await response.clone().json().catch(() => null)
+        }
+        if (null !== responseJSON) {
+          this._dictionary.set(this.localeId, responseJSON)
+        } else if (this.localeId !== DEFAULT_LOCALE) {
+          await this.setLocale(DEFAULT_LOCALE)
+        }
+      }
       this.translatePage()
-    }
-    return this._translator
+      resolve(this._translator.bind(this))
+    })
+
+    return this._pending
   }
 
   _translator(i18lKey) {

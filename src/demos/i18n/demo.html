@@ -38,23 +38,37 @@
             <button class="en">English</button>
             <button class="es-pr">Spanish</button>
             <button class="ar">Arabic</button>
+            <button class="fk">Fake</button>
         </main>
         <script type="module">
             import I18n from '../../i18n.js'
             I18n.loadPath = 'locales'
             I18n.enableDocumentObserver()
 
+            async function translationText() {
+              const _translator = await I18n.init()
+              console.log(_translator('global:header'))
+            }
 
-            document.querySelector('button.en').addEventListener('click', () => {
+            document.querySelector('button.en').addEventListener('click', async () => {
+              await translationText()
               I18n.setLocale('en')
             })
 
-            document.querySelector('button.es-pr').addEventListener('click', () => {
+            document.querySelector('button.es-pr').addEventListener('click', async () => {
+              await translationText()
               I18n.setLocale('es-pr')
             })
 
-            document.querySelector('button.ar').addEventListener('click', () => {
+            document.querySelector('button.ar').addEventListener('click', async () => {
+              await translationText()
               I18n.setLocale('ar')
+
+            })
+
+            document.querySelector('button.fk').addEventListener('click', async () => {
+              await translationText()
+              I18n.setLocale('fk')
             })
           </script>
     </body>
