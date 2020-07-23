@@ -25,7 +25,7 @@ class I18n {
     this._dictionary = new Map()
     const pathRegex = new RegExp(/^.*\//)
     this._initialBasePath = pathRegex.exec(globalThis.location.href)[0] || ''
-    this._loadPath = this._initialBasePath + 'assets/locales/${lang}.json'
+    this._loadPath = 'assets/locales'
   }
 
   get localeId() {
@@ -41,14 +41,11 @@ class I18n {
   }
 
   get loadPath() {
-    return this._interpolate({
-      params: { lang: this.localeId },
-      template: this._loadPath
-    })
+    return globalThis.decodeURIComponent(new URL(`${this._loadPath}/${this.localeId}.json`,  this._initialBasePath))
   }
 
   set loadPath(url) {
-    this._loadPath = globalThis.decodeURIComponent(new URL(url + '${lang}.json',  this._initialBasePath))
+    this._loadPath = url
   }
 
   formatDateTime(date, lng = this.localeId, options = {}) {
@@ -58,12 +55,6 @@ class I18n {
 
   formatNumber(number, lng = this.localeId) {
     return new Intl.NumberFormat(lng).format(number)
-  }
-
-  _interpolate({ params, template }) {
-    const keys = Object.keys(params)
-    let keyValues = Object.values(params)
-    return new Function(...keys, `return \`${template}\``)(...keyValues)
   }
 
   initSessionLocale() {
