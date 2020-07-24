@@ -23,10 +23,11 @@ export default class Observable {
     }
     const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
     if (this.isFunction(next)) {
-      const nextModified = (subject) => {
+      const nextModified = () => {
         const count = ~~this.counter.get(uid) + 1
         this.counter.set(uid, count)
-        next(subject)
+        const subject = Array.from(arguments)
+        next.apply(null, subject)
         this.only(uid)
       }
       this.observers.set(uid, nextModified)
