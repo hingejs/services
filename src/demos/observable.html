@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Observable Demo</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            main {
+                min-height: 100vh;
+            }
+
+            .demo {
+                color: red;
+            }
+
+            html body {
+                background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
+            }
+
+            html[lang="en"] .demo {
+                color: green;
+            }
+
+            html[lang="ar"] body {
+                background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+
+            html[lang="es-pr"] body {
+                background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h3>Observable Demo</h3>
+            <button class="en">NOTIFY</button>
+        </main>
+        <script type="module">
+            import Observable from '../observable.js'
+            const observable = new Observable()
+            observable.notify('previous')
+              const subscription = observable.subscribe({
+                complete: () => { },
+                error: () => { },
+                next: (msg) => { console.log('once only', msg) }
+              }).only(1)
+              const subscription2 = observable.subscribe({
+                complete: () => { },
+                error: () => { },
+                next: (msg) => { console.count(msg) }
+              })
+
+
+            document.querySelector('button.en').addEventListener('click', async () => {
+              observable.notify('test')
+
+            })
+          </script>
+    </body>
+</html>
+

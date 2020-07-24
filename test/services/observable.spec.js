@@ -51,5 +51,14 @@ describe('Observable', () => {
       subscription.unsubscribe()
     })
 
+    it('should limit the number if emits when only() is set', async () => {
+      const observable = new Observable()
+      observable.subscribe(() => { }).only(2)
+      observable.notify('test')
+      expect(observable.observers).to.not.be.empty
+      observable.notify('test')
+      expect(observable.observers).to.be.empty
+    })
+
   })
 })

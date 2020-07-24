@@ -10,6 +10,7 @@ export default class Observable {
     this.completes = new Map()
     this.counter = new Map()
     this.maxLife = new Map()
+    this._currentSubject = null
   }
 
   isFunction(f) {
@@ -23,15 +24,17 @@ export default class Observable {
     }
     const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
     if (this.isFunction(next)) {
-      const nextModified = () => {
+      const nextModified = (...subjects) => {
         const count = ~~this.counter.get(uid) + 1
         this.counter.set(uid, count)
-        const subject = Array.from(arguments)
-        next.apply(null, subject)
+        next.apply(null, subjects)
         this.only(uid)
       }
       this.observers.set(uid, nextModified)
       this.counter.set(uid, 0)
+      if(null !== this._currentSubject) {
+        nextModified.apply(null, this._currentSubject)
+      }
     }
     if (this.isFunction(error)) {
       this.errors.set(uid, error)
@@ -47,6 +50,7 @@ export default class Observable {
       uid,
       unsubscribe: this.unsubscribe.bind(this, uid),
     }
+
     return methods
   }
 
@@ -69,6 +73,7 @@ export default class Observable {
 
   notify() {
     const subject = Array.from(arguments)
+    this._currentSubject = subject
     this.observers.forEach(observer => observer.apply(null, subject))
   }
 
