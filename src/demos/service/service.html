@@ -41,9 +41,9 @@
 
             const readySub = SampleService.ReadyState.subscribe(state => {
               if(state === SampleService.ReadyState.PREPARING) {
-                console.log('prep')
+               // console.log('prep')
               } else {
-                console.log('ready')
+                //console.log('ready')
                 SampleService.subscribe(d => {
                   console.log('make sure only called 1', d)
                 }).only(1)
@@ -51,7 +51,7 @@
             })
 
             const sub = SampleService.subscribe(data => {
-              console.log('data', data)
+              //console.log('data', data)
             })
 
             document.querySelector('button.en').addEventListener('click', async () => {
