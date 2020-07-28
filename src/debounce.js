@@ -1,10 +1,10 @@
 const Debounce = (func, wait = 50) => {
   let timer
-  return params => {
+  return (...params) => {
     if (timer) {
-      window.clearTimeout(timer)
+      globalThis.clearTimeout(timer)
     }
-    timer = window.setTimeout(func, wait, params)
+    timer = globalThis.setTimeout(func.bind.apply(func, [null].concat(params)), wait)
   }
 }
 export default Debounce

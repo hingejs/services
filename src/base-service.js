@@ -1,4 +1,6 @@
+import Debounce from './debounce.js'
 import Observable from './observable.js'
+import ReadyState from './ready-state.js'
 export default class BaseService extends Observable {
 
   constructor() {
@@ -7,15 +9,8 @@ export default class BaseService extends Observable {
       return this.instance
     }
     this.instance = this
-    this._payload
-    this._mutatedPayload
-  }
-
-  /**
-   * Sends out data to registered callback functions
-   */
-  announcePayload() {
-    this.notify(this._mutatedPayload)
+    this.ReadyState = new ReadyState()
+    this.resetPayload()
   }
 
   /**
@@ -23,7 +18,8 @@ export default class BaseService extends Observable {
    */
   resetPayload() {
     this._payload = null
-    this._mutatedPayload = null
+    this._mutatedPayload = this.observe({data: null})
+    Object.seal(this._mutatedPayload)
     return this
   }
 
@@ -37,15 +33,61 @@ export default class BaseService extends Observable {
     return model
   }
 
-  subscribe(f) {
-    const subscription = super.subscribe(f)
-    if(this._mutatedPayload) {
-      const next = this.observers.get(subscription.uid)
-      if(next) {
-        next(this._mutatedPayload)
+
+   deepMerge(...args) {
+    let target = {};
+    const isObject = (variable) => Object.prototype.toString.call(variable) === '[object Object]'
+
+    // Merge the object into the target object
+    let merger = (obj) => {
+        for (let prop in obj) {
+          if (obj.hasOwnProperty(prop)) {
+            if (isObject(obj[prop])){
+              // If we're doing a deep merge
+              // and the property is an object
+              target[prop] = merge(target[prop], obj[prop]);
+            } else {
+              // Otherwise, do a regular merge
+              target[prop] = obj[prop];
+            }
+           }
+        }
+    };
+     //Loop through each object and conduct a merge
+     for (let i = 0; i < args.length; i++) {
+        merger(args[i]);
+     }
+       return target;
+  };
+
+
+  observe(obj) {
+    const debounceModelUpdate = Debounce((...args) => {
+      this.notify(...args)
+      this.ReadyState.ready()
+    })
+      const handler = {
+        get: (target, prop) => {
+            // get the value of the property
+            const value = target[prop];
+            if (!value) {
+              return '' // return empty string instead of null/undefined
+            }
+            if (typeof value === 'object') {
+              // if the target is also an object, proxy that too
+              return new Proxy(target[prop], handler)
+            }
+            return value; // it's not null and not an object, return it
+          },
+        set: (target, prop, newValue) => {
+          if (target[prop] !== newValue) {
+            target[prop] = newValue
+            debounceModelUpdate(obj.data)
+          }
+          return true
+        }
       }
-    }
-    return subscription
+      return new Proxy(obj, handler)
   }
 
 }

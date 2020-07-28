@@ -1,6 +1,5 @@
 import HtmlMarker from './html-marker.js'
-export default function ModelMixin(Base) {
-  return class Model extends Base {
+export default Base => class extends Base {
 
     constructor() {
       super()

@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Observable Demo</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            main {
+                min-height: 100vh;
+            }
+
+            .demo {
+                color: red;
+            }
+
+            html body {
+                background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
+            }
+
+            html[lang="en"] .demo {
+                color: green;
+            }
+
+            html[lang="ar"] body {
+                background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+
+            html[lang="es-pr"] body {
+                background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h3>Service Call Demo</h3>
+            <button class="en">Make Call</button>
+        </main>
+        <script type="module">
+            import SampleService from './sample.js'
+
+            const readySub = SampleService.ReadyState.subscribe(state => {
+              if(state === SampleService.ReadyState.PREPARING) {
+                console.log('prep')
+              } else {
+                console.log('ready')
+                SampleService.subscribe(d => {
+                  console.log('make sure only called 1', d)
+                }).only(1)
+              }
+            })
+
+            const sub = SampleService.subscribe(data => {
+              console.log('data', data)
+            })
+
+            document.querySelector('button.en').addEventListener('click', async () => {
+              SampleService.makeCall()
+
+
+
+            })
+          </script>
+    </body>
+</html>
+
