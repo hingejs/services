@@ -8,6 +8,9 @@ class SampleService extends BaseService {
   }
 
   makeCall() {
+    const ENDPOINT1 = 'https://jsonplaceholder.typicode.com/todos/1'
+    const ENDPOINT2 = './data.json'
+
     if(this.controller instanceof AbortController) {
       this.controller.abort()
     }
@@ -16,7 +19,10 @@ class SampleService extends BaseService {
     this.ReadyState.preparing()
     this.resetPayload()
 
-    new HttpFetch({signal:this.controller.signal}).get('./data.json')
+
+
+    //setTimeout(()=>{
+    new HttpFetch({signal:this.controller.signal}).get(ENDPOINT2)
     .then(r => HttpFetch.toJSON(r))
     .then(v => {
       console.log('call complete')
@@ -29,8 +35,8 @@ class SampleService extends BaseService {
         if (error.name !== 'AbortError') {
           console.log('this is a real error')
         }
-
     })
+  //}, 2000)
 
 
   }

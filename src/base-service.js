@@ -10,6 +10,8 @@ export default class BaseService extends Observable {
     }
     this.instance = this
     this.ReadyState = new ReadyState()
+    this._subjectData = this.observe({ data: undefined })
+    Object.seal(this._subjectData)
     this.resetPayload()
   }
 
@@ -18,8 +20,6 @@ export default class BaseService extends Observable {
    */
   resetPayload() {
     this._payload = null
-    this._mutatedPayload = this.observe({data: null})
-    Object.seal(this._mutatedPayload)
     return this
   }
 
@@ -33,31 +33,31 @@ export default class BaseService extends Observable {
     return model
   }
 
-
-   deepMerge(...args) {
+  //work on getting this to be the way to update the model payload
+  updateMerge(...args) {
     let target = {};
     const isObject = (variable) => Object.prototype.toString.call(variable) === '[object Object]'
 
     // Merge the object into the target object
     let merger = (obj) => {
-        for (let prop in obj) {
-          if (obj.hasOwnProperty(prop)) {
-            if (isObject(obj[prop])){
-              // If we're doing a deep merge
-              // and the property is an object
-              target[prop] = merge(target[prop], obj[prop]);
-            } else {
-              // Otherwise, do a regular merge
-              target[prop] = obj[prop];
-            }
-           }
+      for (let prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          if (isObject(obj[prop])) {
+            // If we're doing a deep merge
+            // and the property is an object
+            target[prop] = merge(target[prop], obj[prop]);
+          } else {
+            // Otherwise, do a regular merge
+            target[prop] = obj[prop];
+          }
         }
+      }
     };
-     //Loop through each object and conduct a merge
-     for (let i = 0; i < args.length; i++) {
-        merger(args[i]);
-     }
-       return target;
+    //Loop through each object and conduct a merge
+    for (let i = 0; i < args.length; i++) {
+      merger(args[i]);
+    }
+    return target;
   };
 
 
@@ -66,28 +66,27 @@ export default class BaseService extends Observable {
       this.notify(...args)
       this.ReadyState.ready()
     })
-      const handler = {
-        get: (target, prop) => {
-            // get the value of the property
-            const value = target[prop];
-            if (!value) {
-              return '' // return empty string instead of null/undefined
-            }
-            if (typeof value === 'object') {
-              // if the target is also an object, proxy that too
-              return new Proxy(target[prop], handler)
-            }
-            return value; // it's not null and not an object, return it
-          },
-        set: (target, prop, newValue) => {
-          if (target[prop] !== newValue) {
-            target[prop] = newValue
-            debounceModelUpdate(obj.data)
-          }
-          return true
+    const handler = {
+      get: (target, prop) => {
+        const value = target[prop]
+        if (!value) {
+          return '' /* return empty string instead of null/undefined */
         }
+        const isObject = variable => Object.prototype.toString.call(variable) === '[object Object]'
+        if (isObject(value)) {
+          return new Proxy(target[prop], handler)
+        }
+        return value /* it's not null and not an object, return it */
+      },
+      set: (target, prop, newValue) => {
+        if (target[prop] !== newValue) {
+          target[prop] = newValue
+          debounceModelUpdate(obj.data)
+        }
+        return true
       }
-      return new Proxy(obj, handler)
+    }
+    return new Proxy(obj, handler)
   }
 
 }

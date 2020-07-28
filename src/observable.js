@@ -10,7 +10,6 @@ export default class Observable {
     this.completes = new Map()
     this.counter = new Map()
     this.maxLife = new Map()
-    this._currentSubject = null
   }
 
   isFunction(f) {
@@ -32,7 +31,7 @@ export default class Observable {
       }
       this.observers.set(uid, nextModified)
       this.counter.set(uid, 0)
-      if(null !== this._currentSubject) {
+      if(undefined !== this._currentSubject) {
         nextModified.apply(null, this._currentSubject)
       }
     }
