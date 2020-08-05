@@ -1,78 +1,88 @@
-
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Observable Demo</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            main {
-                min-height: 100vh;
-            }
 
-            .demo {
-                color: red;
-            }
+<head>
+  <title>Observable Demo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    main {
+      min-height: 100vh;
+    }
 
-            html body {
-                background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
-            }
+    .demo {
+      color: red;
+    }
 
-            html[lang="en"] .demo {
-                color: green;
-            }
+    html body {
+      background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
+    }
 
-            html[lang="ar"] body {
-                background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
-            }
+    html[lang="en"] .demo {
+      color: green;
+    }
 
-            html[lang="es-pr"] body {
-                background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
-            }
-        </style>
-    </head>
-    <body>
-        <main>
-            <h3>Service Call Demo</h3>
-            <button class="en">Make Call</button>
-            <button class="mr">Merge Data</button>
-            <button class="rs">Reset Data</button>
-        </main>
-        <script type="module">
-            import SampleService from './sample.js'
+    html[lang="ar"] body {
+      background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
+    }
 
-            const readySub = SampleService.ReadyState.subscribe(state => {
-              if(state === SampleService.ReadyState.PREPARING) {
-               // console.log('prep')
-              } else {
-                //console.log('ready')
-                SampleService.subscribe(d => {
-                  console.log('make sure only called 1', d)
-                }).only(1)
-              }
-            })
+    html[lang="es-pr"] body {
+      background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+    }
+  </style>
+</head>
 
-            const sub = SampleService.subscribe(data => {
-              console.log('data', data)
-            })
+<body>
+  <main>
+    <h3>Service Call Demo</h3>
+    <button class="en">Make Call</button>
+    <button class="mr">Merge Data</button>
+    <button class="rs">Reset Data</button>
+  </main>
+  <script type="module">
+    import SampleService from './sample.js'
 
-            document.querySelector('button.en').addEventListener('click', async () => {
-              SampleService.makeCall()
+    const readySub = SampleService.ReadyState.subscribe(state => {
+      if (state === SampleService.ReadyState.PREPARING) {
+        // console.log('prep')
+      } else {
+        //console.log('ready')
+        SampleService.subscribe(d => {
+          console.log('make sure only called 1', d)
+        }).only(1)
+      }
+    })
 
-            })
+    const sub = SampleService.subscribe(data => {
+      console.log('data', data)
+    })
 
-            document.querySelector('button.mr').addEventListener('click', async () => {
-              const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
+    document.querySelector('button.en').addEventListener('click', async () => {
+      SampleService.makeCall()
 
-              SampleService.updateModel({[`new_${uid}`]: `new_${uid}`})
+    })
 
-            })
+    document.querySelector('button.mr').addEventListener('click', async () => {
+      const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
 
-            document.querySelector('button.rs').addEventListener('click', async () => {
-              SampleService.resetModel()
+      SampleService.updateModel({
+        [`new_${uid}`]: `new_${uid}`,
+        deep: {
+          deeper: {
+            muchmore: `more_${uid}`,
+          }
+        }
+      })
 
-            })
-          </script>
-    </body>
+
+    })
+
+    document.querySelector('button.rs').addEventListener('click', async () => {
+
+      SampleService.resetModel()
+
+    })
+  </script>
+</body>
+
 </html>
-

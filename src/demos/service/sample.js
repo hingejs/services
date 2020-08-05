@@ -5,11 +5,18 @@ class SampleService extends BaseService {
 
   constructor() {
     super()
+    //this.setModelPipe()
   }
 
   get defaultModel() {
     return {
       test: '',
+      deep: {
+        more: '',
+        deeper: {
+          muchmore: '',
+        }
+      }
     }
   }
 
@@ -23,9 +30,6 @@ class SampleService extends BaseService {
     this.controller = new AbortController()
 
     this.ReadyState.preparing()
-    this.resetPayload()
-
-
 
     //setTimeout(()=>{
     new HttpFetch({signal:this.controller.signal}).get(ENDPOINT2)
