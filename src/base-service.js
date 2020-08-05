@@ -10,7 +10,7 @@ export default class BaseService extends Observable {
     }
     this.instance = this
     this.ReadyState = new ReadyState()
-    this._pipeModel = new Set()
+    this.PipeModel = new Set()
     this._subjectModel = this.defaultModel
     Object.seal(this._subjectModel)
   }
@@ -26,9 +26,8 @@ export default class BaseService extends Observable {
   set model(value) {
     if (this._isObject(value)) {
       const target = JSON.parse(JSON.stringify(this._subjectModel))
-      this._subjectModel = value
-      //const pipeReduce = (prevMessage, curr) => prevMessage ? prevMessage : curr(target)
-      //target = [...this._pipeModel].reduce(pipeReduce, '')
+      const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x)
+      this._subjectModel = pipe(...this.PipeModel)(value)
       if (JSON.stringify(target) !== JSON.stringify(value)) {
         this.notify(this.model)
         this.ReadyState.ready()

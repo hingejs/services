@@ -6,6 +6,7 @@ class SampleService extends BaseService {
   constructor() {
     super()
     //this.setModelPipe()
+    this.PipeModel.add(this._modelPayload.bind(this))
   }
 
   get defaultModel() {
@@ -52,6 +53,8 @@ class SampleService extends BaseService {
   }
 
   _modelPayload(payload) {
+    console.log('payload')
+    payload.date = new Date()
     return payload
   }
 
