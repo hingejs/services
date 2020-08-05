@@ -10,8 +10,8 @@ export default class BaseService extends Observable {
     }
     this.instance = this
     this.ReadyState = new ReadyState()
-    this._subjectData = this.observe({ data: undefined })
-    Object.seal(this._subjectData)
+    this._subjectModel = this.observe({ data: this.defaultModel })
+    Object.seal(this._subjectModel)
     this.resetPayload()
   }
 
@@ -33,35 +33,41 @@ export default class BaseService extends Observable {
     return model
   }
 
+  get model() {
+    return this._subjectModel.data
+  }
+
+  set model(value) {
+    this._subjectModel.data = value
+  }
+
+  get defaultModel() {
+    return {}
+  }
+
+  resetModel() {
+    this.model = this.defaultModel
+    return this
+  }
+
   //work on getting this to be the way to update the model payload
-  updateMerge(...args) {
-    let target = {};
+  updateModel(...args) {
+    const target = {}
     const isObject = (variable) => Object.prototype.toString.call(variable) === '[object Object]'
 
     // Merge the object into the target object
-    let merger = (obj) => {
-      for (let prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          if (isObject(obj[prop])) {
-            // If we're doing a deep merge
-            // and the property is an object
-            target[prop] = merge(target[prop], obj[prop]);
-          } else {
-            // Otherwise, do a regular merge
-            target[prop] = obj[prop];
-          }
-        }
-      }
-    };
-    //Loop through each object and conduct a merge
-    for (let i = 0; i < args.length; i++) {
-      merger(args[i]);
+    const merger = (obj) => {
+      Object.entries(obj).forEach(([prop, value]) => {
+          target[prop] = isObject(value) ? merge(target[prop], value) : value
+      })
     }
-    return target;
-  };
+    //Loop through each object and conduct a merge
+    args.unshift(this.model)
+    args.filter(objArg => undefined !== objArg).forEach(arg => merger(arg))
+    this.model = target
+  }
 
-
-  observe(obj) {
+  observe(obj, key = 'data') {
     const debounceModelUpdate = Debounce((...args) => {
       this.notify(...args)
       this.ReadyState.ready()
@@ -79,9 +85,9 @@ export default class BaseService extends Observable {
         return value /* it's not null and not an object, return it */
       },
       set: (target, prop, newValue) => {
-        if (target[prop] !== newValue) {
+        if (JSON.stringify(target[prop]) !== JSON.stringify(newValue)) {
           target[prop] = newValue
-          debounceModelUpdate(obj.data)
+          debounceModelUpdate(obj[key])
         }
         return true
       }

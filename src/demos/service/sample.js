@@ -7,6 +7,12 @@ class SampleService extends BaseService {
     super()
   }
 
+  get defaultModel() {
+    return {
+      test: '',
+    }
+  }
+
   makeCall() {
     const ENDPOINT1 = 'https://jsonplaceholder.typicode.com/todos/1'
     const ENDPOINT2 = './data.json'
@@ -26,7 +32,7 @@ class SampleService extends BaseService {
     .then(r => HttpFetch.toJSON(r))
     .then(v => {
       console.log('call complete')
-      this._mutatedPayload.data = v
+      this.updateModel(v)
       return v
     }).catch(error => {
       console.log('is this the abort?')

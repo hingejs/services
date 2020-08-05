@@ -35,6 +35,8 @@
         <main>
             <h3>Service Call Demo</h3>
             <button class="en">Make Call</button>
+            <button class="mr">Merge Data</button>
+            <button class="rs">Reset Data</button>
         </main>
         <script type="module">
             import SampleService from './sample.js'
@@ -57,7 +59,17 @@
             document.querySelector('button.en').addEventListener('click', async () => {
               SampleService.makeCall()
 
+            })
 
+            document.querySelector('button.mr').addEventListener('click', async () => {
+              const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
+
+              SampleService.updateModel({[`new_${uid}`]: `new_${uid}`})
+
+            })
+
+            document.querySelector('button.rs').addEventListener('click', async () => {
+              SampleService.resetModel()
 
             })
           </script>
