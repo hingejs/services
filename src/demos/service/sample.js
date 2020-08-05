@@ -5,7 +5,6 @@ class SampleService extends BaseService {
 
   constructor() {
     super()
-    //this.setModelPipe()
     this.PipeModel.add(this._modelPayload.bind(this))
   }
 
