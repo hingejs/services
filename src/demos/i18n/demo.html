@@ -50,10 +50,15 @@
             <button class="ar">Arabic</button>
             <button class="fk">Fake</button>
             <a href="?locale=ar">Url Translate link</a>
+
+            <input placeholder="testing" data-i18n-placeholder="placeholder" />
+            <input data-i18n-value="placeholder" />
+
         </main>
         <script type="module">
             import I18n from '../../i18n.js'
             I18n.config({
+              attributeMap: [{ attr: 'value', selector: 'data-i18n-value' }],
               loadBasePath: 'http://127.0.0.1:5501/',
               loadPath: '/src/demos/i18n/locales',
               storageKey: 'i18nLocale',

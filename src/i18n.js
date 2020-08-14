@@ -13,10 +13,9 @@ class I18n {
 
   constructor() {
     this._attributeMap = [
-      { attr: 'data-caption', selector: 'data-i18n-caption' },
       { attr: 'placeholder', selector: 'data-i18n-placeholder' },
     ]
-    this._attributeFilters = new Set(['data-i18n', 'data-i18n-unsafe', 'data-i18n-placeholder', 'data-i18n-caption'])
+    this._attributeFilters = new Set(['data-i18n', 'data-i18n-unsafe', 'data-i18n-placeholder'])
     this._localeId = null
     this._observer = null
     this._dictionary = new Map()
@@ -27,11 +26,17 @@ class I18n {
     this._pending = null
   }
 
-  config({loadBasePath, loadPath, storageKey, urlParam}) {
+  config({attributeMap, loadBasePath, loadPath, storageKey, urlParam}) {
     this._loadBasePath = loadBasePath || globalThis.location.origin
     this._loadPath = loadPath || ''
     this._storage_key = storageKey || 'i18nLocale'
     this._url_param_key = urlParam || 'locale'
+    if(Array.isArray(attributeMap)) {
+      attributeMap.filter(({selector}) => !this._attributeFilters.has(selector)).forEach(({attr, selector}) => {
+        this._attributeMap.push({attr, selector})
+        this._attributeFilters.add(selector)
+      })
+    }
   }
 
   get localeId() {
