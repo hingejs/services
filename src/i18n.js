@@ -9,9 +9,6 @@ const DEFAULT_DATE_TIME_OPTIONS = {
   year: 'numeric'
 }
 
-const STORAGE_KEY = 'i18nLocale'
-const URL_PARAM_KEY = 'locale'
-
 class I18n {
 
   constructor() {
@@ -23,10 +20,18 @@ class I18n {
     this._localeId = null
     this._observer = null
     this._dictionary = new Map()
-    const pathRegex = new RegExp(/^.*\//)
-    this._initialBasePath = pathRegex.exec(globalThis.location.href)[0] || ''
-    this._loadPath = 'assets/locales'
+    this._loadBasePath = globalThis.location.origin
+    this._loadPath = ''
+    this._storage_key = 'i18nLocale'
+    this._url_param_key = 'locale'
     this._pending = null
+  }
+
+  config({loadBasePath, loadPath, storageKey, urlParam}) {
+    this._loadBasePath = loadBasePath || globalThis.location.origin
+    this._loadPath = loadPath || ''
+    this._storage_key = storageKey || 'i18nLocale'
+    this._url_param_key = urlParam || 'locale'
   }
 
   get localeId() {
@@ -35,16 +40,20 @@ class I18n {
 
   set localeId(id) {
     this._localeId = id
-    globalThis.sessionStorage.setItem(STORAGE_KEY, this.localeId)
+    globalThis.sessionStorage.setItem(this.STORAGE_KEY, this.localeId)
     document.documentElement.setAttribute('lang', this.localeId)
   }
 
   get loadPath() {
-    return globalThis.decodeURIComponent(new URL(`${this._loadPath}/${this.localeId}.json`, this._initialBasePath))
+    return globalThis.decodeURIComponent(new URL(`${this._loadPath}/${this.localeId}.json`, this._loadBasePath))
   }
 
-  set loadPath(url) {
-    this._loadPath = url
+  get STORAGE_KEY() {
+    return this._storage_key
+  }
+
+  get URL_PARAM_KEY() {
+    return this._url_param_key
   }
 
   formatDateTime(date, lng = this.localeId, options = {}) {
@@ -58,7 +67,7 @@ class I18n {
 
   initSessionLocale() {
     const searchParams = new URLSearchParams(globalThis.location.search)
-    const locale = searchParams.get(URL_PARAM_KEY) || globalThis.sessionStorage.getItem(STORAGE_KEY)
+    const locale = searchParams.get(this.URL_PARAM_KEY) || globalThis.sessionStorage.getItem(this.STORAGE_KEY)
     if (locale) {
       this.localeId = locale
     }
@@ -73,10 +82,7 @@ class I18n {
    * Sets the local based on a language key stored in session.
    */
   async setLocale(locale = null) {
-    if (!locale) {
-      locale = DEFAULT_LOCALE
-    }
-    this.localeId = locale
+    this.localeId = locale || DEFAULT_LOCALE
 
     this._pending = new Promise(async (resolve, reject) => {
       if (!this._dictionary.get(this.localeId)) {

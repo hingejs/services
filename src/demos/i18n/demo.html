@@ -6,28 +6,38 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            main {
-                min-height: 100vh;
+            :root {
+              --bg-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
+            }
+
+            html, body {
+              margin: 0;
+              padding: 0;
             }
 
             .demo {
                 color: red;
             }
 
-            html[lang="en"] body {
-                background-image: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
-            }
-
             html[lang="en"] .demo {
                 color: green;
             }
 
-            html[lang="ar"] body {
-                background-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
+            html[lang="ar"] {
+              --bg-image: linear-gradient(rgba(0, 255, 255, 0.5), rgba(255, 0, 0, 0.5));
             }
 
-            html[lang="es-pr"] body {
-                background-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+            html[lang="es-pr"] {
+              --bg-image: linear-gradient(rgba(255, 0, 255, 0.5), rgba(255, 0, 0, 0.5));
+            }
+
+            main {
+                min-height: 100vh;
+                padding: 2rem;
+            }
+
+            body {
+              background-image: var(--bg-image);
             }
         </style>
     </head>
@@ -39,10 +49,17 @@
             <button class="es-pr">Spanish</button>
             <button class="ar">Arabic</button>
             <button class="fk">Fake</button>
+            <a href="?locale=ar">Url Translate link</a>
         </main>
         <script type="module">
             import I18n from '../../i18n.js'
-            I18n.loadPath = 'locales'
+            I18n.config({
+              loadBasePath: 'http://127.0.0.1:5501/',
+              loadPath: '/src/demos/i18n/locales',
+              storageKey: 'i18nLocale',
+              urlParam: 'locale'
+
+            })
             I18n.enableDocumentObserver()
 
             async function translationText() {
@@ -63,7 +80,6 @@
             document.querySelector('button.ar').addEventListener('click', async () => {
               await translationText()
               I18n.setLocale('ar')
-
             })
 
             document.querySelector('button.fk').addEventListener('click', async () => {
