@@ -24,10 +24,10 @@ export default class BaseService extends Observable {
 
   set model(value) {
     if (this._isObject(value)) {
-      const target = JSON.parse(JSON.stringify(this._subjectModel))
+      const previousModel = JSON.parse(JSON.stringify(this._subjectModel))
       const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x)
       this._subjectModel = pipe(...this.PipeModel)(value)
-      if (JSON.stringify(target) !== JSON.stringify(value)) {
+      if (JSON.stringify(previousModel) !== JSON.stringify(this.model)) {
         this.notify(this.model)
         this.ReadyState.ready()
       }
