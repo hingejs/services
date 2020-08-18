@@ -9,6 +9,8 @@ class Router {
     this._paths = new Map()
     this._allPathHandlers = new Set()
     this._basePath = window.location.origin
+    this._currentHistoryState = ''
+    this._canExitFn = null
     this._exitFn = null
     this.lastRoutePath = window.sessionStorage.getItem('last-route-path') || ''
     this.historyChangeBind = this.historyChange.bind(this)
@@ -61,7 +63,20 @@ class Router {
   }
 
   async historyChange() {
-    if (typeof this._exitFn === 'function') {
+    if (this.isFunction(this._canExitFn)) {
+      const canExit = await this._canExitFn()
+
+      if (!canExit) {
+        if(window.history.state !== this._currentHistoryState) {
+          window.history.pushState(this._currentHistoryState, document.title, this._currentHistoryState)
+        }
+        return
+      } else {
+        this._canExitFn = null
+      }
+    }
+
+    if (this.isFunction(this._exitFn)) {
       await this._exitFn()
     }
     this._exitFn = null
@@ -79,6 +94,7 @@ class Router {
 
     const handlers = this.getPath(route)
     const req = {
+      canExit: this._canExit.bind(this),
       exit: this._exit.bind(this),
       params: this._pathParams(route),
       route,
@@ -87,7 +103,7 @@ class Router {
     const pipeNext = callbacks => {
       if (Array.isArray(callbacks) && callbacks.length) {
         const next = callbacks.shift()
-        if (typeof next === 'function') {
+        if (this.isFunction(next)) {
           next(req, pipeNext.bind(this, callbacks))
         }
       }
@@ -96,6 +112,7 @@ class Router {
       const allHandlers = [...this._allPathHandlers].concat(handlers)
       pipeNext(allHandlers.slice())
     }
+    this._currentHistoryState = window.history.state
   }
 
   get basePath() {
@@ -172,6 +189,10 @@ class Router {
     this._exitFn = fn
   }
 
+  _canExit(fn) {
+    this._canExitFn = fn
+  }
+
   _pathToRegex(path = '') {
     const pattern = this.getAdjustedPath(path).split('/')
       .filter(pathName => pathName.length)
@@ -204,9 +225,13 @@ class Router {
    * @param {function} fn (req, next) => { }
    */
   use(fn) {
-    if(typeof fn === 'function') {
+    if(this.isFunction(fn)) {
       this._allPathHandlers.add(fn)
     }
+  }
+
+  isFunction(f) {
+    return typeof f === 'function'
   }
 
   async customElementsReady(req, next) {
