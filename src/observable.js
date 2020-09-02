@@ -10,6 +10,7 @@ export default class Observable {
     this.completes = new Map()
     this.counter = new Map()
     this.maxLife = new Map()
+    this._currentSubject = undefined
   }
 
   isFunction(f) {
