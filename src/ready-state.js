@@ -22,8 +22,12 @@ export default class ReadyState extends Observable {
     return READY
   }
 
+  get CurrentState() {
+    return this._currentState
+  }
+
   changeState(state) {
-    if(this._currentState !== state && (state === this.PREPARING || state === this.READY)) {
+    if (this._currentState !== state && (state === this.PREPARING || state === this.READY)) {
       this._currentState = state
       this.notify(this._currentState)
     }
