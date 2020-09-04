@@ -2,6 +2,7 @@ export default class Observable {
 
   constructor() {
     this.reset()
+    this.includeErrorCount = false
   }
 
   reset() {
@@ -10,6 +11,7 @@ export default class Observable {
     this.completes = new Map()
     this.counter = new Map()
     this.maxLife = new Map()
+    this.uidSet = new Set()
     this._currentSubject = undefined
   }
 
@@ -23,17 +25,13 @@ export default class Observable {
       ({ next, error, complete } = f)
     }
     const uid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '')
+    this.counter.set(uid, 0)
+    this.uidSet.add(uid)
+
     if (this.isFunction(next)) {
-      const nextModified = (...subjects) => {
-        const count = ~~this.counter.get(uid) + 1
-        this.counter.set(uid, count)
-        next.apply(null, subjects)
-        this.only(uid)
-      }
-      this.observers.set(uid, nextModified)
-      this.counter.set(uid, 0)
+      this.observers.set(uid, next)
       if(undefined !== this._currentSubject) {
-        nextModified.apply(null, this._currentSubject)
+        next.apply(null, this._currentSubject)
       }
     }
     if (this.isFunction(error)) {
@@ -42,8 +40,12 @@ export default class Observable {
     if (this.isFunction(complete)) {
       this.completes.set(uid, complete)
     }
+    if(undefined !== this._currentSubject) {
+      this.updateCount(uid)
+    }
     const methods = {
-      only: (times) => {
+      only: (times, includeErrors = false) => {
+        this.includeErrorCount = includeErrors
         this.only(uid, times)
         return methods
       },
@@ -52,6 +54,14 @@ export default class Observable {
     }
 
     return methods
+  }
+
+  updateCount(uid = null) {
+    Array.from(this.uidSet).filter(uuid => uid ? uuid===uid : true).forEach(uid => {
+      const count = ~~this.counter.get(uid) + 1
+      this.counter.set(uid, count)
+      this.only(uid)
+    })
   }
 
   unsubscribe(uid) {
@@ -64,6 +74,7 @@ export default class Observable {
     this.completes.delete(uid)
     this.counter.delete(uid)
     this.maxLife.delete(uid)
+    this.uidSet.delete(uid)
   }
 
   complete() {
@@ -75,11 +86,15 @@ export default class Observable {
     const subject = Array.from(arguments)
     this._currentSubject = subject
     this.observers.forEach(observer => observer.apply(null, subject))
+    this.updateCount()
   }
 
   notifyError() {
     const subject = Array.from(arguments)
     this.errors.forEach(observer => observer.apply(null, subject))
+    if(this.includeErrorCount) {
+      this.updateCount()
+    }
   }
 
   /**
