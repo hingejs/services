@@ -25,6 +25,7 @@
   <h2><a href="https://hingejs.github.io/services/">&#8617; Go Back</a></h2>
 
   <h3>Working sample</h3>
+  <button id="addit">Add queryPAram</button>
 
   <h-route-link data-route="docs/">
     Page1
@@ -86,7 +87,8 @@
 
   <script type="module">
     import 'https://cdn.jsdelivr.net/npm/@hingejs/webcomponents@latest/index.min.js'
-    import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services@latest/index.min.js'
+    //import { Router } from 'https://cdn.jsdelivr.net/npm/@hingejs/services@latest/index.min.js'
+    import { Router } from '../index.js'
 
     /* using the HingeJS scaffold files will have a way to import html pages with webpack html-loader */
     const HtmlCache = new Map()
@@ -112,6 +114,20 @@
     Router.defaultPath('docs/')
     Router.setPath('docs/', RouteCtrlPage1)
     Router.setPath('docs/page2', RouteCtrlPage2)
+
+
+    const btnAddit = document.querySelector('#addit')
+
+    let oncre = 0
+    btnAddit.addEventListener('click', () => {
+
+      if(oncre > 5) {
+        oncre = 0
+        Router.updateURLSearchParams({test: '', another: oncre})
+      } else {
+        Router.updateURLSearchParams({test: oncre++})
+      }
+    })
 
   </script>
 </body>

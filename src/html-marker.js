@@ -1,4 +1,6 @@
-const REGEX_LITERAL = /(\${.+?})/gi
+const REGEX_LITERAL = /(\${.+?})/gi /*Alt: /(\${.+(?=[\${.+?}]+)?})/gi */
+const STRING_LITERAL_FINDS = /\$\{(([\w_\(\)\.\$])+)\}/gi
+const PARAM_FROM_FUNCTION = /\$*\w+\s*\((.*)\)/gi
 const BOOLEAN_ATTRIBUTES = new Set([
   'allowfullscreen',
   'allowpaymentrequest',
@@ -28,7 +30,7 @@ const BOOLEAN_ATTRIBUTES = new Set([
 ])
 
 export default class HtmlMarker {
-  constructor(defaultModel) {
+  constructor() {
     this.referenceNodes = new Set()
     this.uuid = new Date().getTime().toString(36) + performance.now().toString().replace(/[^0-9]/g, '') + '@'
     this.model = {}
@@ -36,8 +38,6 @@ export default class HtmlMarker {
       ['$_removeHTML', this.removeHTML.bind(this)],
       ['$_unsafeHTML', this.unsafeHTML.bind(this)]
     ])
-    /* We need all the values that are needed to render the first pass */
-    this.updateModel(defaultModel)
   }
 
   get decorators() {
@@ -55,10 +55,29 @@ export default class HtmlMarker {
     return this.update()
   }
 
-  async render(target, templateString) {
+  _templateStringDataModel(templateString) {
+    const matches = new Set(Array.from(templateString.matchAll(STRING_LITERAL_FINDS), m => m[1]).map(model => {
+      /* this makes no sense what so ever,
+         why do I need to run the match before the match all
+         regex.test works but breaks
+      */
+      if(model.match(PARAM_FROM_FUNCTION)) {
+        model = Array.from(model.matchAll(PARAM_FROM_FUNCTION), m => m[1]).shift()
+      }
+      return model
+    }).filter(val => val && val.length))
+    const defaultModel = [...matches].reduce((acc,curr) => (acc[curr]='', acc), {})
+    /* We need all the values that are needed to render the first pass */
+    this.updateModel(defaultModel)
+  }
+
+  async render(target, templateString, initialModel = {}) {
     /* remove comments that are found in the string since we use them as markers */
     templateString = templateString.replace(/<!--[\s\S]*?-->/gm, '')
     const rootElement = this._fragmentFromString(templateString)
+    console.log(templateString)
+    this._templateStringDataModel(templateString)
+    this.updateModel(initialModel)
     const frag = this._markerTree(rootElement)
     await this._referenceTree(frag)
     if (target) { /* allow for shadowRoot */
@@ -67,8 +86,6 @@ export default class HtmlMarker {
     }
     return Promise.resolve(true)
   }
-
-
 
   _fragmentFromString(strHTML) {
     const template = document.createElement('template')
@@ -97,15 +114,15 @@ export default class HtmlMarker {
   }
 
   _markerTree(rootElement) {
-    const walker = document.createTreeWalker(
+    const walker = document.createNodeIterator(
       rootElement,
       NodeFilter.SHOW_ALL,
       null,
       false
     )
     let expressions = []
-    while (walker.nextNode()) {
-      const node = walker.currentNode
+    let node
+    while (node = walker.nextNode()) {
       if (node.nodeType === Node.ELEMENT_NODE && (window.customElements.get(node.tagName) || node.tagName.includes('-'))) {
         continue
       }
@@ -124,15 +141,16 @@ export default class HtmlMarker {
         }
       }
     }
-    const walkerComments = document.createTreeWalker(
+    const walkerComments = document.createNodeIterator(
       rootElement,
       NodeFilter.SHOW_COMMENT,
       null,
       false
     )
     let i = 0
-    while (walkerComments.nextNode()) {
-      walkerComments.currentNode.textContent = `${this.uuid}${expressions[i++]}`
+    let nodeComments
+    while (nodeComments = walkerComments.nextNode()) {
+      nodeComments.textContent = `${this.uuid}${expressions[i++]}`
     }
     return rootElement
   }
@@ -155,14 +173,14 @@ export default class HtmlMarker {
   }
 
   _referenceTree(rootElement) {
-    const walker = document.createTreeWalker(
+    const walker = document.createNodeIterator(
       rootElement,
       NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_ELEMENT,
       null,
       false
     )
-    while (walker.nextNode()) {
-      const node = walker.currentNode
+    let node
+    while (node = walker.nextNode()) {
       /* Do not filter custom elements to allow attribute updates */
       if (node.nodeType === Node.ELEMENT_NODE && node.hasAttributes()) {
         const attrs = [...node.attributes]
@@ -198,29 +216,33 @@ export default class HtmlMarker {
     return Promise.resolve(true)
   }
 
-   /* update all referenced nodes with the model values */
-   update() {
+  /* update all referenced nodes with the model values */
+  update() {
     this.referenceNodes.forEach(({ isBooleanAttr = false, name = '', node, oldValue = null, value }, reference) => {
-      let newValue = this._interpolate({ params: this.model, template: value })
-      if (!isBooleanAttr && newValue !== oldValue) {
-        if (node.nodeType === Node.COMMENT_NODE) {
-          const newNode = this._parseHTML(`<span>${newValue}</span>`)
-          node.parentNode.replaceChild(newNode, node.nextSibling)
-        } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
-          if (node.nodeName === 'class') {
-            newValue = this._handleClassValue({ node, oldValue, value })
-          } else {
+      if (node.nodeType === Node.ELEMENT_NODE && !document.body.contains(node)) {
+        this.referenceNodes.delete(reference)
+      } else {
+        let newValue = this._interpolate({ params: this.model, template: value })
+        if (!isBooleanAttr && newValue !== oldValue) {
+          if (node.nodeType === Node.COMMENT_NODE) {
+            const newNode = this._parseHTML(`<span>${newValue}</span>`)
+            node.parentNode.replaceChild(newNode, node.nextSibling)
+          } else if (node.nodeType === Node.ATTRIBUTE_NODE) {
+            if (node.nodeName === 'class') {
+              newValue = this._handleClassValue({ node, oldValue, value })
+            } else {
+              node.value = newValue
+            }
+            /* textarea is an element node that requires an attribute update */
+          } else if (node.tagName === 'TEXTAREA') {
             node.value = newValue
           }
-          /* textarea is an element node that requires an attribute update */
-        } else if (node.tagName === 'TEXTAREA') {
-          node.value = newValue
         }
+        if (isBooleanAttr) {
+          node.toggleAttribute(name, !!newValue.toString().length)
+        }
+        reference.oldValue = newValue
       }
-      if (isBooleanAttr) {
-        node.toggleAttribute(name, !!newValue.toString().length)
-      }
-      reference.oldValue = newValue
     })
     return Promise.resolve(true)
   }
@@ -292,7 +314,7 @@ export default class HtmlMarker {
     if ((typeof obj !== 'object' && !Array.isArray(obj)) || !obj) {
       return func(obj)
     }
-    let accObj = Array.isArray(obj) ? [] : {}
+    const accObj = Array.isArray(obj) ? [] : {}
     const arrObj = Array.isArray(obj) ? [...obj.entries()] : Object.entries(obj)
     return arrObj.reduce((acc, [key, value]) => {
       acc[key] = this.mapRecursive(value, func)

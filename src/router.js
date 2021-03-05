@@ -220,6 +220,23 @@ class Router {
     window.history.replaceState({}, document.title, window.location.pathname)
   }
 
+  updateURLSearchParams(params = {}) {
+    const searchParams = new URLSearchParams(window.location.search)
+
+    Object.entries(params)
+      .map(param => param.map(window.encodeURIComponent))
+      .forEach(([key, value]) => {
+        if (searchParams.has(key)) {
+          searchParams.delete(key)
+        }
+        searchParams.append(key, value)
+      })
+    const finalParams = searchParams.toString()
+    window.history.pushState({}, document.title, `${this.getCurrentPath()}?${finalParams}`)
+    return this
+  }
+
+
   /**
    * Executes for all routes as pre-middleware
    * @param {function} fn (req, next) => { }

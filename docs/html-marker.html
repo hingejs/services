@@ -43,9 +43,9 @@
 
       (async () => {
         let model = { id: new Date().getTime(), test: 'this is a test' }
-        const htmlMarker = new HtmlMarker(model)
-        const htmlString = '&lt;p id="${id}">${test}&lt;/p>&lt;p>${_unsafeHTML(test)}&lt;/p>'
-        await htmlMarker.render(document.body, htmlString)
+        const htmlMarker = new HtmlMarker()
+        const htmlString = '&lt;p id="${id}">${test}&lt;/p>&lt;p>${$_unsafeHTML(test)}&lt;/p>'
+        await htmlMarker.render(document.body, htmlString, model)
 
         window.setInterval(() => {
           model = { test: `&lt;p>${new Date().getTime()}&lt;/p>` }
@@ -57,12 +57,13 @@
   <h3>Working sample</h3>
   <script type="module">
     import { HtmlMarker } from 'https://cdn.jsdelivr.net/npm/@hingejs/services@latest/index.min.js'
+    //import HtmlMarker from '../src/html-marker.js'
 
     (async () => {
       let model = { id: new Date().getTime(), test: 'this is a test' }
-      const htmlMarker = new HtmlMarker(model)
-      const htmlString = '<p id="${id}">${test}</p><p>${_unsafeHTML(test)}</p>'
-      await htmlMarker.render(document.body, htmlString)
+      const htmlMarker = new HtmlMarker()
+      const htmlString = '<p id="${id}">${test}</p><p>${$_unsafeHTML(test)}</p>'
+      await htmlMarker.render(document.body, htmlString, model)
 
       window.setInterval(() => {
         model = { test: `<p>${new Date().getTime()}</p>` }
