@@ -49,6 +49,9 @@
 
   <h3>Working sample</h3>
   <h1 class="demo" data-i18n="global:header"></h1>
+  <h1 class="demo" data-i18n-date="2021-03-05T17:44:12.508Z"></h1>
+  <h1 class="demo" data-i18n-number="3242342344"></h1>
+  <h1 class="demo" data-i18n-currency="3242342344"></h1>
   <button class="en">English</button>
   <button class="es-pr">Spanish</button>
   <button class="es">Bad Change</button>
@@ -56,6 +59,19 @@
   <a href="?locale=es-pr">Spanish Link</a>
   <script type="module">
     import { I18n } from 'https://cdn.jsdelivr.net/npm/@hingejs/services@latest/index.min.js'
+    /*import I18n from '../src/i18n.js'
+    I18n.config({
+      loadPath: 'docs/assets/locales',
+      decorators: [
+        {
+          attr: 'data-i18n-currency',
+          config: {
+            callback: (number) => `<p>${new Intl.NumberFormat(I18n.localeId, { style: 'currency', currency: 'USD' }).format(number)}</p>`,
+            unsafe: false
+          }
+        }
+      ]
+    })*/
     I18n.enableDocumentObserver()
 
     document.querySelector('button.en').addEventListener('click', () => {

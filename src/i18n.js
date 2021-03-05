@@ -15,7 +15,8 @@ class I18n {
     this._attributeMap = [
       { attr: 'placeholder', selector: 'data-i18n-placeholder' },
     ]
-    this._attributeFilters = new Set(['data-i18n', 'data-i18n-unsafe', 'data-i18n-placeholder'])
+    this._attributeFilters = new Set(['data-i18n', 'data-i18n-date', 'data-i18n-number', 'data-i18n-unsafe', 'data-i18n-placeholder'])
+    this._decorators = new Map()
     this._localeId = null
     this._observer = null
     this._dictionary = new Map()
@@ -26,7 +27,7 @@ class I18n {
     this._pending = null
   }
 
-  config({attributeMap, loadBasePath, loadPath, storageKey, urlParam}) {
+  config({attributeMap, decorators, loadBasePath, loadPath, storageKey, urlParam}) {
     this._loadBasePath = loadBasePath || globalThis.location.origin
     this._loadPath = loadPath || ''
     this._storage_key = storageKey || 'i18nLocale'
@@ -35,6 +36,14 @@ class I18n {
       attributeMap.filter(({selector}) => !this._attributeFilters.has(selector)).forEach(({attr, selector}) => {
         this._attributeMap.push({attr, selector})
         this._attributeFilters.add(selector)
+      })
+    }
+    if(Array.isArray(decorators)) {
+      decorators.forEach(({attr, config}) => {
+        if(config.callback && this.isFunction(config.callback)) {
+          this._decorators.set(attr, config)
+          this._attributeFilters.add(attr)
+        }
       })
     }
   }
@@ -63,11 +72,24 @@ class I18n {
 
   formatDateTime(date, lng = this.localeId, options = {}) {
     const DATE_TIME_OPTIONS = { ...DEFAULT_DATE_TIME_OPTIONS, ...options }
-    return new Date(date).toLocaleDateString(lng, DATE_TIME_OPTIONS)
+    let outputValue = ''
+    if (/^[0-9]*$/.test(date)) {
+      outputValue = Number(date)
+    } else if (date && date.length && !window.isNaN(Date.parse(date))) {
+      outputValue = date
+    }
+    if (outputValue.toString().length) {
+      outputValue = new Date(outputValue).toLocaleDateString(lng, DATE_TIME_OPTIONS)
+    }
+    return outputValue
   }
 
-  formatNumber(number, lng = this.localeId) {
-    return new Intl.NumberFormat(lng).format(number)
+  formatNumber(number, lng = this.localeId, options = {}) {
+    return new Intl.NumberFormat(lng, options).format(number)
+  }
+
+  isFunction(f) {
+    return typeof f === 'function'
   }
 
   initSessionLocale() {
@@ -109,9 +131,9 @@ class I18n {
     return this._pending
   }
 
-  _translator(i18lKey) {
-    const keys = this._dictionary.get(this.localeId)
-    return keys && keys.hasOwnProperty(i18lKey) ? keys[i18lKey] : ''
+  _translator(i18nKey) {
+    const dictionary = this._dictionary.get(this.localeId)
+    return dictionary && dictionary.hasOwnProperty(i18nKey) ? dictionary[i18nKey] : i18nKey
   }
 
   setPageTitle(i18lKey) {
@@ -147,6 +169,40 @@ class I18n {
       this._ensureDirAttribute(element)
     })
     this._attributeMap.forEach(def => this.translateAttribute(def))
+    this.translateDates().translateNumbers().translateDecorators()
+  }
+
+  translateDates() {
+    const elements = Array.from(document.querySelectorAll('[data-i18n-date]'))
+    elements.forEach(element => {
+      const i18nKeyValue = element.dataset.i18nDate
+      element.textContent = this.formatDateTime(this._translator(i18nKeyValue))
+      this._ensureDirAttribute(element)
+    })
+    return this
+  }
+
+  translateNumbers() {
+    const elements = Array.from(document.querySelectorAll('[data-i18n-number]'))
+    elements.forEach(element => {
+      const i18nKeyValue = element.dataset.i18nNumber
+      element.textContent = this.formatNumber(this._translator(i18nKeyValue))
+      this._ensureDirAttribute(element)
+    })
+    return this
+  }
+
+  translateDecorators() {
+    this._decorators.forEach((config, attr) => {
+      const {callback, unsafe = false} = config
+      const elements = Array.from(document.querySelectorAll(`[${attr}]`))
+      elements.forEach(element => {
+        const i18nKey = element.getAttribute(attr)
+        element[unsafe ? 'innerHTML' : 'textContent'] = callback(this._translator(i18nKey))
+        this._ensureDirAttribute(element)
+      })
+    })
+    return this
   }
 
   /* Ensure the text displayed is shown in the correct direction */
